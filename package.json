@@ -2,7 +2,7 @@
   "name": "tiebreaker",
   "description": "A middle stage helper tournament to deal with the complexities of handling ties",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
     "url": "clux/tiebreaker"
