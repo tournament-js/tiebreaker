@@ -180,48 +180,54 @@ test("gs 6 3 unique groups !mapsBreak", function (t) {
       var tb = TieBreaker.from(gs, n);
       var tms = tb.matches;
 
-      var verifyR2 = function (m, r1m) { // m is always the round 2 match
-        t.equal(m.id.r, 2, "between match should be in R2");
-        t.equal(m.p.length, 2, "and we then will need to tiebreak 2 players");
-
-        if (n === 1) {
-          t.deepEqual(m.p, [1, 2], "winners proceeded to R2 now");
-        }
-        if (n === 3) {
-          // in both cases, r1 => 2 > 5 > 4 || 2 > 5 => 5 is 2nd
-          // 6 always 2nd in first group 2
-          t.deepEqual(m.p, [6, 5], "2nd placers proceeded to R2 now");
-        }
-        t.equal(tb.unscorable(m.id, [2,1]), null, "can score r2 now");
-        t.ok(tb.score(m.id, [2,1]), "could score r2");
-        t.ok(tb.isDone(), "should all be done now");
-      };
-
       t.equal(tms.length, 2, "two tiebreakers for " + n);
-      t.equal(tms[0].id.r, 1, "first should be a round 1 match");
+      var r1m = tms[0];
+      var r2m = tms[1];
+      t.equal(r2m.id.r, 2, "between match should be in R2");
+      t.equal(r2m.p.length, 2, "and we then will need to tiebreak 2 players");
+      t.equal(r1m.id.r, 1, "first should be a round 1 match");
+
+
       if (!mapsBreak) {
-        t.deepEqual(tms[0].p, [2, 4, 5], "and entire group 2 must be broken");
+        t.deepEqual(r1m.p, [2, 4, 5], "and entire group 2 must be broken");
       }
       else {
-        t.deepEqual(tms[0].p, [2, 5], "and part of group 2 must be broken");
+        t.deepEqual(r1m.p, [2, 5], "and part of group 2 must be broken");
       }
       // know one 2nd placer or one 1st placer
 
       var r2players = (n === 3) ? [6, 0] : [1, 0];
-      t.deepEqual(tms[1].p, r2players, "one player known to advance for " + n);
-      t.ok(tb.unscorable(tms[1].id, [2,1]), "can't score r2 yet");
-      // scoring in this match so that results for grp one is as follows:
-      // 1st: 2, 2nd: 5, 3rd: 4 (this matches how it is if mapsBreak)
+      t.deepEqual(r2m.p, r2players, "one player known to advance for " + n);
+      t.ok(tb.unscorable(r2m.id, [2,1]), "can't score r2 yet");
+
+      // scoring
       if (!mapsBreak) {
-        t.deepEqual(tms[0].p, [2, 4, 5], 'r1 match');
-        t.ok(tb.score(tms[0].id, [3,1,2]), "can score R1 match");
+        t.deepEqual(r1m.p, [2, 4, 5], 'r1 match');
+        t.ok(tb.score(r1m.id, [2,1,3]), "can rescore R1 match");
       }
       else {
-        t.deepEqual(tms[0].p, [2, 5], 'r1 match');
-        t.ok(tb.score(tms[0].id, [3,1]), "can score R1 match");
+        t.deepEqual(r1m.p, [2, 5], 'r1 match');
+        t.ok(tb.score(r1m.id, [1,2]), "can rescore R1 match");
+      }
+      var xplacers = (n === 1) ? [1, 5] : [6, 2]
+      t.deepEqual(r2m.p, xplacers, "r2 match gets 5 progressed");
+
+      // rescoring
+      if (!mapsBreak) {
+        t.ok(tb.score(r1m.id, [3,1,2]), "can score R1 match");
+      }
+      else {
+        t.ok(tb.score(r1m.id, [3,1]), "can score R1 match");
       }
       t.ok(!tb.isDone(), "not done yet 2");
-      verifyR2(tms[1], tms[0]);
+
+      var xplacersRe = (n === 1) ? [1, 2] : [6, 5];
+      // in n=3 cases, r1 => 2 > 5 > 4 || 2 > 5 => 5 is 2nd
+      t.deepEqual(r2m.p, xplacersRe, "xplacers proceeded to R2 now");
+
+      t.equal(tb.unscorable(r2m.id, [2,1]), null, "can score r2 now");
+      t.ok(tb.score(r2m.id, [2,1]), "could score r2");
+      t.ok(tb.isDone(), "should all be done now");
     });
   });
   t.end();
