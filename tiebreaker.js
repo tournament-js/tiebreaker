@@ -141,13 +141,34 @@ var makePosAry2 = function (posAry, r1) {
         // this is the cluster that was tied - now unbroken
         var sorted = Base.sorted(m); // no ties by definition
         for (var j = 0; j < p.length; j += 1) {
-          res[x + j] = [sorted[j]]; // gpos x+j is the player that scored jth in m
+          res[x + j] = [sorted[j]];
         }
         x += p.length; // we split up the chunk into p.length different xplacers
       }
     }
     return res;
   });
+};
+
+var splitSeedArray = function (posAry, match) {
+  var seedAry = posAry[match.id.m-1];
+  var res = $.replicate(seedAry.length, []);
+  for (var x = 0; x < seedAry.length; x += 1) {
+    var xps = seedAry[x]; // x-placers
+    if (xps.indexOf(match.p[0]) < 0) {
+      res[x] = xps.slice(); // this chunk needed no breaking - copy
+      x += 1;
+    }
+    else {
+      var sorted = Base.sorted(match); // sorted.length === xps.length
+      for (var j = 0; j < xps.length; j += 1) {
+        // gpos x+j is the player that scored jth in match
+        res[x + j] = [sorted[j]];
+      }
+      x += xps.length; // we split the chunk into xps.length different xplacers
+    }
+  }
+  return res;
 };
 
 function TieBreaker(oldRes, limit) {
@@ -199,22 +220,14 @@ TieBreaker.prototype.verify =  function (match, score) {
   return null;
 };
 
-TieBreaker.prototype.limbo = function (playerId) {
-  // we know if a player has won a R1 match he will be in R2
-  // TODO: so do this check here
-  return;
-};
-
 TieBreaker.prototype.progress = function (match) {
    // if id.r === 1, we need to move the player to r2 if it exists
   var last = this.matches[this.matches.length-1];
   if (match.id.r === 1 && last.id.r === 2) {
     var position = Math.floor(this.limit / this.numGroups);
-    var posAry2 = makePosAry2(this.posAry, this.matches.slice(0, -1));
-    //if (!(last.p[match.id.m-1] instanceof Number)) {
-    //  throw new Error(JSON.stringify(last.p) + JSON.stringify(match.id) + JSON.stringify(posAry2[match.id.m-1]))
-    //}
-    last.p[match.id.m-1] = posAry2[match.id.m-1][position][0];
+    var seedAry = splitSeedArray(this.posAry, match);
+    // TODO: splice in seedAry into posAry at index match.id.m-1?
+    last.p[match.id.m-1] = seedAry[position][0];
   }
 };
 
