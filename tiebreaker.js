@@ -190,20 +190,10 @@ function TieBreaker(oldRes, limit) {
   this.posAry = posByGroup(oldRes, this.numGroups);
   this.limit = limit;
   Base.call(this, createTbForGroups(this.posAry, limit));
-  var r1 = this.findMatches({ r: 1 });
-  var r2 = this.findMatches({ r: 2 });
-  this.numPlayers = oldRes.length;
-
-  // need to demote positions until stuff has been played
-  // NB: if this tournament is contained in a groupstage wrapper
-  // we never see the positions from groupstage because they are tied at `np`
-  // until it is done, but when it is done, results are deferred to TieBreaker
-  var numTbPlayers = $.flatten(r1.map($.get('p'))).length;
-  if (r2.length) {
-    numTbPlayers += (this.numGroups - r1.length);
-  }
   var pls = this.players();
-  var tieStart = limit + numTbPlayers - 1;
+  this.numPlayers = pls.length; // need to match up
+
+  var tieStart = limit + this.numPlayers - 1;
   oldRes.forEach(function (r) {
     if (pls.indexOf(r.seed) >= 0) {
       console.log('bumping', r.seed, 'to', tieStart);
@@ -241,9 +231,9 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   if (res.length < numPlayers) {
     throw new Error(err + "not enough players");
   }
-  var luckies = res.filter(function (r) {
-    return r.pos <= numPlayers;
-  });
+  //var luckies = res.filter(function (r) {
+  //  return r.pos <= numPlayers;
+  //});
   //if (luckies.length === numPlayers)
   //   return blank instance? we are technically done...
 
