@@ -189,6 +189,7 @@ function TieBreaker(oldRes, limit) {
   this.groupSize = Math.ceil(oldRes.length / this.numGroups);
   this.posAry = posByGroup(oldRes, this.numGroups);
   this.limit = limit;
+  this.oldRes = oldRes;
   Base.call(this, createTbForGroups(this.posAry, limit));
   var pls = this.players();
   this.numPlayers = pls.length; // need to match up
@@ -256,15 +257,9 @@ TieBreaker.idString = idString;
 //};
 
 
-TieBreaker.prototype.initResult = function (seed) {
-  return $.firstBy(function (r) {
-    return r.seed === seed;
-  }, this.oldRes);
-};
-
-TieBreaker.prototype.stats = function (res) {
+TieBreaker.prototype.stats = function (/*res*/) {
   var ms = this.matches;
-  var oldRes = this.oldRes;
+  var res = this.oldRes.slice(); // ignore produced res - modify copied old
   var last = ms[ms.length-1];
   var hasR2 = (last.id.r === 2);
   var r1 = hasR2 ? ms.slice(0, -1) : ms;
@@ -272,7 +267,7 @@ TieBreaker.prototype.stats = function (res) {
 
   // r1 matches determine gpos for the tied cluster at limit border
   var getPlayersAboveInGroup = function (grpNum, gpos) {
-    return oldRes.filter(function (r) {
+    return res.filter(function (r) {
       return (r.grp === grpNum && r.gpos < gpos);
     }).length;
   };

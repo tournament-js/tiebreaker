@@ -7,7 +7,7 @@
     "type": "git",
     "url": "clux/tiebreaker"
   },
-  "keywords": [],
+  "keywords": ["groupstage"],
   "main": "tiebreaker.js",
   "scripts": {
     "test": "tap test/tb.gs.test.js"

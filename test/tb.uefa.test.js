@@ -1,7 +1,7 @@
 var tap = require('tap')
   , test = tap.test
-  , GroupStage = require('../')
-  , TieBreaker = require('../tiebreak_groups');
+  , GroupStage = require('groupstage')
+  , TieBreaker = require('../');
 
 var killDraws = function (resAry) {
   resAry.forEach(function (r) {
@@ -11,7 +11,11 @@ var killDraws = function (resAry) {
 
 test("tiebreaker 6 3 uefa", function (t) {
   // same as tb uefa test
-  var uefa = new GroupStage(6, 3, { meetTwice: true });
+  var uefa = new GroupStage(6, {
+    groupSize: 3,
+    meetTwice: true,
+    scoresBreak: true
+  });
   uefa.matches.forEach(function (m) {
     t.ok(uefa.score(m.id, m.p[0] < m.p[1] ? [2,1] : [1, 2]), "score match");
   });
@@ -20,7 +24,7 @@ test("tiebreaker 6 3 uefa", function (t) {
   // no tiebreaking, so xplacers: [[1,2], [], [3, 4], [], [5, 6], []]
   // (shared 1st, shared 3rd, shared 5th)
 
-  var res = uefa.results({scoresBreak: true});
+  var res = uefa.results();
   killDraws(res);
   // inlined res from gs.uefa test here
 
@@ -33,7 +37,7 @@ test("tiebreaker 6 3 uefa", function (t) {
     { seed:6, wins:0, 'for':4, against:8, pos:5, grp:1, gpos:3, pts:0, losses:4 }
   ], "gs.uefa.test results are the same");
 
-  var tb = new TieBreaker(res, 3);
+  var tb = TieBreaker.from(uefa, 3);
   t.equal(tb.matches.length, 1, "only one match in tb");
   var m = tb.matches[0];
   t.equal(m.id.r, 2, "and it's a between groups one");
