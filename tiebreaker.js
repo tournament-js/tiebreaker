@@ -1,6 +1,6 @@
 var $ = require('interlude')
   , Base = require('tournament')
-  , algs = require('./balancer');
+  , algs = require('./helpers');
 
 var invalid = function (oldRes, limit) {
   if (!Array.isArray(oldRes)) {
@@ -12,7 +12,7 @@ var invalid = function (oldRes, limit) {
   var poss = [];
   for (var i = 0; i < oldRes.length; i += 1) {
     var r = oldRes[i];
-    var props = [r.seed, r.pts, r.for, r.against, r.gpos, r.grp, r.pos];
+    var props = [r.seed, r.pts, r['for'], r.against, r.gpos, r.grp, r.pos];
     if (!props.every(Base.isInteger)) {
       return "invalid GroupStage results - common properties missing";
     }
@@ -49,16 +49,6 @@ var idString = function (id) {
  * NO SCORES THEREIN CAN TIE.
  * GroupStage scores will be updated (to not have ties) after TieBreaker done
  */
-
-// given untied R1 (reflected in posAry) generate players in R2
-var generateR2 = function (posAry, position) {
-  return posAry.map(function (seedAry) {
-    if (seedAry[position].length !== 1) {
-      throw new Error("cannot generate TieBreaker round 2: round 1 still tied!");
-    }
-    return seedAry[position][0];
-  }).sort($.compare());
-};
 
 var createTbForGroups = function (posAry, limit) {
   var numGroups = posAry.length;
@@ -104,14 +94,12 @@ var createTbForGroups = function (posAry, limit) {
   }
 
   // need between match when we don't pick a multiple of numGroups
-  if (rem > 0 && ms.length > 0) {
-    ms.push({ id: { s: 0, r: 2, m: 1 }, p: $.replicate(numGroups, Base.NONE) });
-  }
-  else if (rem > 0) {
-    // in this case we know who starts out in R2 - everyone at gpos position+1
-    // we know this position is untied because ms.length === 0 here
-
-    ms.push({ id: { s: 0, r: 2, m: 1 }, p: generateR2(posAry, position) });
+  if (rem > 0) {
+    // if a r1 match for the group was unnecessary, we know who to pick for r2
+    var ps = posAry.map(function (seedAry) {
+      return (seedAry[position].length !== 1) ? Base.NONE : seedAry[position][0];
+    });
+    ms.push({ id: { s: 0, r: 2, m: 1 }, p: ps });
   }
 
   return ms;
@@ -121,7 +109,7 @@ var createTbForGroups = function (posAry, limit) {
 // where each seedAry is the group's seeds partitioned by their gpos
 // NB: seedAry will function as a lookup of [gpos-1 : gposPlacers]
 var posByGroup = function (oldRes, numGroups) {
-  return algs.resultsByGroup(oldRes, numGroups).map(function (grp) {
+  return algs.resultsBy('grp', oldRes, numGroups).map(function (grp) {
     // NB: need to create the empty arrays to let result function as a lookup
     var seedAry = $.replicate(grp.length, []);
     for (var k = 0; k < grp.length; k += 1) {
@@ -132,10 +120,11 @@ var posByGroup = function (oldRes, numGroups) {
   });
 };
 
+// NB: this does not rely on ANY group assumptions
 // same as posByGroup but splits up inside seedArys when r1 tiebreakers took place
 // in the corresponding group(s).
 // this method is shared by progress and stats, but only stats needs the full result
-var posByGroup2 = function (posAry, r1) {
+var makePosAry2 = function (posAry, r1) {
   return posAry.map(function (posG, i) {
     var m = Base.prototype.findMatch.call({matches: r1}, {s:0, r:1, m: i+1});
     if (!m) { // group did not require tiebreakers - return old seedAry
@@ -161,18 +150,28 @@ var posByGroup2 = function (posAry, r1) {
   });
 };
 
-
-var TieBreaker = Base.sub('TieBreaker', function (opts, initParent) {
+function TieBreaker(oldRes, limit) {
+  if (!(this instanceof TieBreaker)) {
+    return new TieBreaker(oldRes, limit);
+  }
+  var invReason = TieBreaker.invalid(oldRes, limit);
+  if (invReason !== null) {
+    console.error("Invalid %d player TieBreaker with oldRes=%j rejected",
+      limit, oldRes
+    );
+    throw new Error("Cannot construct TieBreaker: " + invReason);
+  }
   // TODO: maybe get the matches instead?
   // numGroups === max section
   // groupSize === maximum players({s:section}).length
-  this.numGroups = $.maximum(this.oldRes.map($.get('grp')));
-  this.groupSize = Math.ceil(this.oldRes.length / this.numGroups);
-  this.posAry = posByGroup(this.oldRes, this.numGroups);
-  initParent(createTbForGroups(this.posAry, this.limit));
-  var r1 = this.findMatches({r:1});
-  var r2 = this.findMatches({r:2});
-  this.numPlayers = this.oldRes.length;
+  this.numGroups = $.maximum(oldRes.map($.get('grp')));
+  this.groupSize = Math.ceil(oldRes.length / this.numGroups);
+  this.posAry = posByGroup(oldRes, this.numGroups);
+  this.limit = limit;
+  Base.call(this, createTbForGroups(this.posAry, limit));
+  var r1 = this.findMatches({ r: 1 });
+  var r2 = this.findMatches({ r: 2 });
+  this.numPlayers = oldRes.length;
 
   // need to demote positions until stuff has been played
   // NB: if this tournament is contained in a groupstage wrapper
@@ -183,14 +182,15 @@ var TieBreaker = Base.sub('TieBreaker', function (opts, initParent) {
     numTbPlayers += (this.numGroups - r1.length);
   }
   var pls = this.players();
-  var tieStart = this.limit + numTbPlayers - 1;
-  this.oldRes.forEach(function (r) {
+  var tieStart = limit + numTbPlayers - 1;
+  oldRes.forEach(function (r) {
     if (pls.indexOf(r.seed) >= 0) {
       console.log('bumping', r.seed, 'to', tieStart);
       r.pos = tieStart;
     }
   });
-});
+}
+Base.inherit(TieBreaker);
 
 TieBreaker.prototype.verify =  function (match, score) {
   if ($.nub(score).length !== score.length) {
@@ -206,9 +206,16 @@ TieBreaker.prototype.limbo = function (playerId) {
 };
 
 TieBreaker.prototype.progress = function (match) {
-  // we know that if there is a r2 match, at least one player from the r1 tiebreaker
-  // will have to be moved there (but which depend on limit)
-  // TODO: move over immediately to position index `grpnum-1`
+   // if id.r === 1, we need to move the player to r2 if it exists
+  var last = this.matches[this.matches.length-1];
+  if (match.id.r === 1 && last.id.r === 2) {
+    var position = Math.floor(this.limit / this.numGroups);
+    var posAry2 = makePosAry2(this.posAry, this.matches.slice(0, -1));
+    //if (!(last.p[match.id.m-1] instanceof Number)) {
+    //  throw new Error(JSON.stringify(last.p) + JSON.stringify(match.id) + JSON.stringify(posAry2[match.id.m-1]))
+    //}
+    last.p[match.id.m-1] = posAry2[match.id.m-1][position][0];
+  }
 };
 
 // custom from because TieBreaker has different constructor arguments
@@ -224,11 +231,12 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   var luckies = res.filter(function (r) {
     return r.pos <= numPlayers;
   });
-  if (luckies.length === numPlayers) {
-    // return blank instance? we are technically done...
-  }
-  opts.limit = numPlayers;
-  var forwarded = new TieBreaker(res, opts);
+  //if (luckies.length === numPlayers)
+  //   return blank instance? we are technically done...
+
+
+  // NB: construction automatically guards on invalid
+  var forwarded = new TieBreaker(res, numPlayers, opts);
   // NB: no replacing for TieBreaker, everything read from results
   return forwarded;
 };
@@ -269,7 +277,7 @@ TieBreaker.prototype.stats = function (res, opts) {
   // so make gpos correct for the scored r1 matches
   r1.filter($.get('m')).forEach(function (m) {
     Base.sorted(m).forEach(function (p, j) { // know this match is untied
-      var resEl = res[p-1];
+      var resEl = Base.resultEntry(res, p);
       resEl.gpos = j + getPlayersAboveInGroup(m.id.m, resEl.gpos) + 1;
     });
   });
@@ -278,10 +286,10 @@ TieBreaker.prototype.stats = function (res, opts) {
     // split posAry2 into xplacers array (similar to the one in GroupStage)
     // array of positions, all of which are arrays of people with same gpos (between)
     var xarys = $.replicate(this.groupSize, []);
-    posByGroup2(this.posAry, r1).forEach(function (grp) {
+    makePosAry2(this.posAry, r1).forEach(function (grp) {
       grp.forEach(function (gxp, i) {
         gxp.forEach(function (s) {
-          xarys[i].push(res[s-1]); // convert seed to result entry
+          xarys[i].push(Base.resultEntry(res, s)); // convert seed to result entry
         });
       });
     });
@@ -289,7 +297,7 @@ TieBreaker.prototype.stats = function (res, opts) {
     // account for between groups match by keeping track of an extra property
     if (hasR2 && last.m) {
       last.p.forEach(function (p, i) {
-        res[p-1].tb = last.m[i];
+        Base.resultEntry(res, p).tb = last.m[i];
       });
     }
 
