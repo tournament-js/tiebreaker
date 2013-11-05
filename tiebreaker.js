@@ -262,9 +262,8 @@ TieBreaker.prototype.initResult = function (seed) {
   }, this.oldRes);
 };
 
-TieBreaker.prototype.stats = function (res, opts) {
+TieBreaker.prototype.stats = function (res) {
   var ms = this.matches;
-  var scoresBreak = opts; // TODO: make an options object
   var oldRes = this.oldRes;
   var last = ms[ms.length-1];
   var hasR2 = (last.id.r === 2);
@@ -305,7 +304,7 @@ TieBreaker.prototype.stats = function (res, opts) {
     }
 
     if (this.isDone()) {
-      algs.positionFromXarys(xarys, scoresBreak);
+      algs.positionFromXarys(xarys, false);
     }
   }
   return res.sort(algs.finalCompare);
