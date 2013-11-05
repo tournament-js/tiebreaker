@@ -297,10 +297,7 @@ TieBreaker.prototype.stats = function (/*res*/) {
         Base.resultEntry(res, p).tb = last.m[i];
       });
     }
-
-    if (this.isDone()) {
-      algs.positionFromXarys(xarys, false);
-    }
+    algs.positionFromXarys(xarys, false);
   }
   return res.sort(algs.finalCompare);
 };
