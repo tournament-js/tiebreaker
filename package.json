@@ -10,11 +10,14 @@
   "keywords": [],
   "main": "tiebreaker.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap test/tb.gs.test.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "interlude": "~1.0.2"
+  },
   "devDependencies": {
-    "tap": "~0.4.4"
+    "tap": "~0.4.4",
+    "groupstage": "~0.5.0"
   },
   "bugs": {
     "url": "http://github.com/clux/tiebreaker/issues"

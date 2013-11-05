@@ -1,10 +1,10 @@
 var test = require('tap').test
   , $ = require('interlude')
-  , GroupStage = require('../')
-  , TieBreaker = require('../tiebreak_groups');
+  , GroupStage = require('groupstage')
+  , TieBreaker = require('../');
 
 test("gs 9 3 all equal scores - proceed 3", function (t) {
-  var gs = new GroupStage(9, 3);
+  var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
   // score so that everyone got exactly one win
@@ -16,7 +16,8 @@ test("gs 9 3 all equal scores - proceed 3", function (t) {
   var res = gs.results();
   t.deepEqual($.nub($.pluck('wins', res)), [1], "all players won 1 match");
 
-  var tb = new TieBreaker(res, 3);
+
+  var tb = TieBreaker.from(gs, 3);
   var tms = tb.matches;
 
   t.equal(tms.length, 3, "should only need within TBs");
@@ -48,7 +49,7 @@ test("gs 9 3 all equal scores - proceed 3", function (t) {
 });
 
 test("gs 9 3 tied only between - proceed any", function (t) {
-  var gs = new GroupStage(9, 3);
+  var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
   // score so that everyone according to seed - ensures no ties within groups
@@ -63,7 +64,7 @@ test("gs 9 3 tied only between - proceed any", function (t) {
 
   $.range(8).forEach(function (n) {
     t.equal(TieBreaker.invalid(res, n), null, "configuration valid");
-    var tb = new TieBreaker(res, n);
+    var tb = TieBreaker.from(gs, n);
     var tms = tb.matches;
     tms.forEach(function (m) {
       t.equal(m.id.s, 0, "all tb matches occur in s=0");
@@ -89,7 +90,7 @@ test("gs 9 3 tied only between - proceed any", function (t) {
           t.deepEqual(tms[0].p, [4,5,6], "the 3 needs to be the 2nd placers");
         }
         else if (n === 7 || n === 8) {
-          t.deepEqual(tms[0].p, [7,8,9], "the 3 needs to be the group losers");
+          t.deepEqual(tms[0].p, [9,8,7], "the 3 needs to be the group losers");
         }
         else {
           t.ok(false, "should not be in this case");
@@ -107,61 +108,62 @@ test("gs 9 3 tied only between - proceed any", function (t) {
 });
 
 test("gs 6 3 unique groups !mapsBreak", function (t) {
-  var gs = new GroupStage(6, 3);
-  var ms = gs.matches;
-
-  // want to score s.t. both groups have clear 1st, 2nd and 3rd (with mapsBreak)
-  // but need breaking between
-
-  // score according to seeds - with magnitude according to group number
-  // this ensure no ties within the groups and no ties between groups
-  // by reversing only one of the matches this is assured (and weighting by round)
-  // weight map scores by groups as well
-  ms.forEach(function (m){
-    var a = m.id.r + m.id.s;
-    gs.score(m.id, (m.id.r === m.id.s) ? [0, a] : [a, 0]);
-  });
-
-  // just to verify the grand scheme:
-  // grp1 should have pts 6 3 0 mapsFor 7 2 0 mapsAgainst 0 3 6
-  // grp2 should have pts 3 3 3 mapsFor 5 4 3 mapsAgainst 4 5 3
-  var makeStr = function(r) {
-    var str = "P" + r.seed + " WDL=" + r.wins + ',' + r.draws + ',' + r.losses;
-    str += " F=" + r.for + " A=" + r.against;
-    str += " => GPOS=" + r.gpos + " in grp " + r.grp;
-    return str;
-  };
-  t.deepEqual(gs.results({mapsBreak: false}).map(makeStr), [
-    'P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
-    'P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2',
-    'P4 WDL=1,0,1 F=3 A=5 => GPOS=1 in grp 2',
-    'P5 WDL=1,0,1 F=4 A=3 => GPOS=1 in grp 2',
-    'P6 WDL=1,0,1 F=2 A=3 => GPOS=2 in grp 1',
-    'P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
-  ],
-    "no break results"
-  );
-
-  t.deepEqual(gs.results({mapsBreak: true}).map(makeStr), [
-    'P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
-    'P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2',
-    'P4 WDL=1,0,1 F=3 A=5 => GPOS=2 in grp 2',
-    'P6 WDL=1,0,1 F=2 A=3 => GPOS=2 in grp 1',
-    'P5 WDL=1,0,1 F=4 A=3 => GPOS=3 in grp 2',
-    'P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
-  ],
-    "map break results"
-  );
-
   [false, true].forEach(function (mapsBreak) {
-    // given two different GROUPSTAGE results, create a tiebreaker from it
-    var res = gs.results({mapsBreak: mapsBreak});
+    var gs = new GroupStage(6, { groupSize: 3, scoresBreak: mapsBreak});
+    var ms = gs.matches;
 
-    t.ok(!TieBreaker.isNecessary(res, 6), "tiebreaker necessary for " + 6);
+    t.equal(gs.scoresBreak, mapsBreak, 'set break correctly');
+    // want to score s.t. both groups have clear 1st, 2nd and 3rd (with mapsBreak)
+    // but need breaking between
+
+    // score according to seeds - with magnitude according to group number
+    // this ensure no ties within the groups and no ties between groups
+    // by reversing only one of the matches this is assured (and weighting by round)
+    // weight map scores by groups as well
+    ms.forEach(function (m){
+      var a = m.id.r + m.id.s;
+      gs.score(m.id, (m.id.r === m.id.s) ? [0, a] : [a, 0]);
+    });
+
+    // just to verify the grand scheme:
+    // grp1 should have pts 6 3 0 mapsFor 7 2 0 mapsAgainst 0 3 6
+    // grp2 should have pts 3 3 3 mapsFor 5 4 3 mapsAgainst 4 5 3
+    var makeStr = function(r) {
+      var str = "P" + r.seed + " WDL=" + r.wins + ',' + r.draws + ',' + r.losses;
+      str += " F=" + r.for + " A=" + r.against;
+      str += " => GPOS=" + r.gpos + " in grp " + r.grp;
+      return str;
+    };
+    if (!mapsBreak) {
+      t.deepEqual(gs.results().map(makeStr), [
+        'P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
+        'P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2',
+        'P5 WDL=1,0,1 F=4 A=3 => GPOS=1 in grp 2',
+        'P4 WDL=1,0,1 F=3 A=5 => GPOS=1 in grp 2',
+        'P6 WDL=1,0,1 F=2 A=3 => GPOS=2 in grp 1',
+        'P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
+      ],
+        "no break results"
+      );
+    }
+    else {
+      t.deepEqual(gs.results().map(makeStr), [
+        'P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
+        'P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2', // P2 ties P5 because
+        'P5 WDL=1,0,1 F=4 A=3 => GPOS=1 in grp 2', // same score diff
+        'P6 WDL=1,0,1 F=2 A=3 => GPOS=2 in grp 1',
+        'P4 WDL=1,0,1 F=3 A=5 => GPOS=3 in grp 2',
+        'P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
+      ],
+        "map break results"
+      );
+    }
+
+    //t.ok(!TieBreaker.isNecessary(res, 6), "tiebreaker necessary for " + 6);
     [2, 4].forEach(function (n) {
       if (!mapsBreak) {
-        t.ok(TieBreaker.isNecessary(res, n), "tiebreaker necessary for " + n);
-        var tb = new TieBreaker(res, n);
+        //t.ok(TieBreaker.isNecessary(res, n), "tiebreaker necessary for " + n);
+        var tb = TieBreaker.from(gs, n);
         var tms = tb.matches;
         t.equal(tms.length, 1, "should be one within tiebreaker for " + n);
         t.equal(tms[0].id.r, 1, "it should be a round 1 match then");
@@ -169,55 +171,57 @@ test("gs 6 3 unique groups !mapsBreak", function (t) {
       }
     });
 
+
+    //if (!mapsBreak) return;
     // will always be TieBreakers when n is not a multiple of 3
     // as mapsBreak is only applied on the within group level
     [1,3].forEach(function (n) {
-      t.ok(TieBreaker.isNecessary(res, n), "tiebreaker necessary for " + n);
-      var tb = new TieBreaker(res, n);
+      //t.ok(TieBreaker.isNecessary(res, n), "tiebreaker necessary for " + n);
+      var tb = TieBreaker.from(gs, n);
       var tms = tb.matches;
 
       var verifyR2 = function (m, r1m) { // m is always the round 2 match
         t.equal(m.id.r, 2, "between match should be in R2");
         t.equal(m.p.length, 2, "and we then will need to tiebreak 2 players");
-        //t.ok(!tb.isDone(), "not done yet 1");
-
-        if (r1m) {
-          t.deepEqual(m.p, [0, 0], "one player known, but not advanced till end");
-          t.ok(tb.unscorable(m.id, [2,1]), "can't score r2 yet");
-          // scoring in this match so that results for grp one is as follows:
-          // 1st: 2, 2nd: 5, 3rd: 4 (this matches how it is if mapsBreak)
-          t.ok(tb.score(r1m.id, [3,1,2]), "can score R1 match");
-          t.ok(!tb.isDone(), "not done yet 2");
-        }
 
         if (n === 1) {
           t.deepEqual(m.p, [1, 2], "winners proceeded to R2 now");
         }
         if (n === 3) {
-          if (!mapsBreak) {
-            // because scored r1 [3,1,2] p2 wins g2, p5 gets second, p4 gets third
-            t.deepEqual(m.p, [5, 6], "2nd placers proceeded to R2 now");
-          }
-          if (mapsBreak) {
-            // because no r1, and mapsBroke, the clear 2nd placers are in between
-            t.deepEqual(m.p, [4, 6], "2nd placers proceeded to R2 now");
-          }
+          // in both cases, r1 => 2 > 5 > 4 || 2 > 5 => 5 is 2nd
+          // 6 always 2nd in first group 2
+          t.deepEqual(m.p, [6, 5], "2nd placers proceeded to R2 now");
         }
         t.equal(tb.unscorable(m.id, [2,1]), null, "can score r2 now");
         t.ok(tb.score(m.id, [2,1]), "could score r2");
         t.ok(tb.isDone(), "should all be done now");
       };
 
+      t.equal(tms.length, 2, "two tiebreakers for " + n);
+      t.equal(tms[0].id.r, 1, "first should be a round 1 match");
       if (!mapsBreak) {
-        t.equal(tms.length, 2, "two tiebreakers for " + n);
-        t.equal(tms[0].id.r, 1, "first should be a round 1 match");
         t.deepEqual(tms[0].p, [2, 4, 5], "and entire group 2 must be broken");
-        verifyR2(tms[1], tms[0]);
       }
       else {
-        t.equal(tms.length, 1, "one tiebreakers for " + n);
-        verifyR2(tms[0]);
+        t.deepEqual(tms[0].p, [2, 5], "and part of group 2 must be broken");
       }
+      // know one 2nd placer or one 1st placer
+
+      var r2players = (n === 3) ? [6, 0] : [1, 0];
+      t.deepEqual(tms[1].p, r2players, "one player known to advance for " + n);
+      t.ok(tb.unscorable(tms[1].id, [2,1]), "can't score r2 yet");
+      // scoring in this match so that results for grp one is as follows:
+      // 1st: 2, 2nd: 5, 3rd: 4 (this matches how it is if mapsBreak)
+      if (!mapsBreak) {
+        t.deepEqual(tms[0].p, [2, 4, 5], 'r1 match');
+        t.ok(tb.score(tms[0].id, [3,1,2]), "can score R1 match");
+      }
+      else {
+        t.deepEqual(tms[0].p, [2, 5], 'r1 match');
+        t.ok(tb.score(tms[0].id, [3,1]), "can score R1 match");
+      }
+      t.ok(!tb.isDone(), "not done yet 2");
+      verifyR2(tms[1], tms[0]);
     });
   });
   t.end();
