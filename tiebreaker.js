@@ -193,11 +193,13 @@ function TieBreaker(oldRes, limit) {
   Base.call(this, createTbForGroups(this.posAry, limit));
   var pls = this.players();
   this.numPlayers = pls.length; // need to match up
+  var playersGuaranteed = oldRes.filter(function (r) {
+    return r.pos <= limit && pls.indexOf(r.seed) < 0
+  }).length;
 
-  var tieStart = limit + this.numPlayers - 1;
+  var tieStart = playersGuaranteed + this.numPlayers;
   oldRes.forEach(function (r) {
     if (pls.indexOf(r.seed) >= 0) {
-      console.log('bumping', r.seed, 'to', tieStart);
       r.pos = tieStart;
     }
   });
@@ -232,12 +234,12 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   if (res.length < numPlayers) {
     throw new Error(err + "not enough players");
   }
-  //var luckies = res.filter(function (r) {
-  //  return r.pos <= numPlayers;
-  //});
-  //if (luckies.length === numPlayers)
-  //   return blank instance? we are technically done...
-
+  var luckies = res.filter(function (r) {
+    return r.pos <= numPlayers;
+  });
+  if (luckies.length === numPlayers) {
+    console.warn('unnecessary %dp TieBreaker construction from', numPlayers, inst);
+  }
 
   // NB: construction automatically guards on invalid
   var forwarded = new TieBreaker(res, numPlayers, opts);
@@ -249,17 +251,11 @@ TieBreaker.from = function (inst, numPlayers, opts) {
 TieBreaker.invalid = invalid;
 TieBreaker.idString = idString;
 
-// given valid (gsResults, limit) do we actually need to tiebreak to pick top limit?
-// ACTUALLY NOT NECESSARY - .from will return an isDone() instance
-//TieBreaker.isNecessary = function (gsResults, limit) {
-//  var tb = new TieBreaker(gsResults, limit);
-//  return (tb.matches && tb.matches.length > 0);
-//};
-
-
 TieBreaker.prototype.stats = function (/*res*/) {
   var ms = this.matches;
-  var res = this.oldRes.slice(); // ignore produced res - modify copied old
+  var res = this.oldRes.map(function (r) {
+    return $.extend({}, r); // deep copy to avoid modifying oldRes
+  });
   var last = ms[ms.length-1];
   var hasR2 = (last.id.r === 2);
   var r1 = hasR2 ? ms.slice(0, -1) : ms;
@@ -276,10 +272,18 @@ TieBreaker.prototype.stats = function (/*res*/) {
     Base.sorted(m).forEach(function (p, j) { // know this match is untied
       var resEl = Base.resultEntry(res, p);
       resEl.gpos = j + getPlayersAboveInGroup(m.id.m, resEl.gpos) + 1;
+      //resEl.pos -=
     });
   });
+  // ideally a win in tb r1 translates to a direct increase in pos
+  // but is this always true - should be if we are demoting
+  // all losses in tbr1 should (because of demotion => pos unchanged)
+  // but we can't really guarantee a too big increase unless done r2
+
 
   if (r1.every($.get('m'))) {
+
+
     // split posAry2 into xplacers array (similar to the one in GroupStage)
     // array of positions, all of which are arrays of people with same gpos (between)
     var xarys = $.replicate(this.groupSize, []);
@@ -297,9 +301,12 @@ TieBreaker.prototype.stats = function (/*res*/) {
         Base.resultEntry(res, p).tb = last.m[i];
       });
     }
-    algs.positionFromXarys(xarys, false);
+    // TODO: doing this after r1 is bad - promoting too soon
+    if (this.isDone()) {
+      algs.positionFromXarys(xarys, false);
+    }
   }
-  return res.sort(algs.finalCompare);
+  return res;//.sort(algs.finalCompare);
 };
 
 module.exports = TieBreaker;

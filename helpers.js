@@ -28,8 +28,8 @@ exports.tieCompute = function (ary, startPos, scoreBreak, cb) {
 };
 
 var $ = require('interlude');
-exports.resultsBy = function (what, results, numGroups) {
-  var grps = $.replicate(numGroups, []);
+exports.resultsBy = function (what, results, len) {
+  var grps = $.replicate(len, []);
   for (var k = 0; k < results.length; k += 1) {
     var p = results[k];
     grps[p[what] - 1].push(p);
