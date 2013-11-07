@@ -56,7 +56,9 @@ exports.compareResults = function (scoresBreak) {
     if (x.pts !== y.pts) {
       return y.pts - x.pts;
     }
-    var scoreDiff = ((y.for - y.against) - (x.for - x.against));
+    var xScore = x.for - (x.against || 0);
+    var yScore = y.for - (y.against || 0);
+    var scoreDiff = yScore - xScore;
     if (scoresBreak && scoreDiff) {
       return scoreDiff;
     }

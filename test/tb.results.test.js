@@ -45,10 +45,6 @@ test("8 4 with 2x three-way tie results", function (t) {
     'gs results'
   );
 
-  var grp1 = res.filter(inGrp(1));
-  var grp2 = res.filter(inGrp(2));
-
-
   var tb = TieBreaker.from(gs, 5);
   var tms = tb.matches;
   t.equal(tms.length, 3, "3 tbs necessary for this");
@@ -71,74 +67,66 @@ test("8 4 with 2x three-way tie results", function (t) {
     ],
     'tb init results'
   );
-  t.deepEqual(tb.players(), [1,4,5,6,7,8], '3way tied players in tb');
-
-  var seventhPlacers = tb.results().filter(function (r) {
-    return r.pos === 7;
-  });
-
-  t.equal(seventhPlacers.length, tb.players().length, 'all tb pls tied');
-
   tb.score(tms[0].id, [3,2,1]);
   t.deepEqual(tms[0].p, [1,6,8], 'group 1 tiebreaker players');
 
-  //var resEarly = tb.results();
-  //t.deepEqual(resEarly.map(makeStr), [
-  //    "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
-  //    "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
-  //    "P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
-  //    "P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
-  //    "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7",
-  //    "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7",
-  //    "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
-  //    "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8",
-  //  ],
-  //  'early results (after 1 match)'
-  //);
-
-  t.end();
-  return;
+  var resEarly = tb.results();
+  t.deepEqual(resEarly.map(makeStr), [
+      "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1", // orig winner
+      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
+      "P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
+      "P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
+      "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7",
+      "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7",
+      "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
+      "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8", // orig loser
+    ],
+    'early results (after 1 match)'
+  );
 
 
   tb.score(tms[1].id, [3,2,1]);
   t.deepEqual(tms[1].p, [4,5,7], 'group 2 tiebreaker players');
 
+  // TODO: should we sort by pos during r1 - at least do after, right?
   var resR1 = tb.results();
   t.deepEqual(resR1.map(makeStr), [
-      "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1",
-      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2",
-      "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2",
-      "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1",
-      "P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2",
-      "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1",
-      "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1",
-      "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2"
+      "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
+      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
+      "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=7",
+      "P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=7",
+      "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7",
+      "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7",
+      "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
+      "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8"
     ],
-    'r1 results'
+    'r1 results - gpos ties resolved'
   );
-  t.end();
-  return;
 
+  //t.deepEqual($.pluck('pos', resR1), [1,2,3,4, 5,5, 7,8], "r2 cluster still tied!");
+  //t.deepEqual($.pluck('seed', resR1), [3,4,5,1, 7,6, 8,2], "and order correct");
 
-  var grp1r1 = resR1.filter(inGrp(1));
-  var grp2r1 = resR1.filter(inGrp(2));
-  t.deepEqual($.pluck('gpos', grp1r1), [1,2,3,4], "group 1 resolved");
-  t.deepEqual($.pluck('gpos', grp2r1), [1,2,3,4], "group 2 resolved");
-  // so clearly not deepEqual to resBackup anymore!
-
-  t.end();
-  return;
-
-  t.deepEqual($.pluck('pos', resR1), [1,2,3,4, 5,5, 7,8], "r2 cluster still tied!");
-  t.deepEqual($.pluck('seed', resR1), [3,4,5,1, 7,6, 8,2], "and order correct");
 
   t.ok(!tb.isDone(), "not done yet");
   tb.score(tms[2].id, [2,1]); // 6 beats 7
   t.ok(tb.isDone(), "now done!");
 
   var resR2 = tb.results();
-  t.deepEqual($.pluck('pos', resR2), [1,2,3,4, 5,6, 7,8], "r2 cluster resolved");
-  t.deepEqual($.pluck('seed', resR2), [3,4,5,1, 6,7, 8,2], "and order correct");
+  //t.deepEqual(resR2.map(makeStr), [
+  //    "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
+  //    "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
+  //    "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=7",
+  //    "P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=7",
+  //    "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7",
+  //    "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7",
+  //    "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
+  //    "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8"
+  //  ],
+  //  'r2 results - pos ties resolved'
+  //);
+
+  //t.deepEqual($.pluck('pos', resR2), [1,2,3,4, 5,6, 7,8], "r2 cluster resolved");
+  //t.deepEqual($.pluck('seed', resR2), [3,4,5,1, 6,7, 8,2], "and order correct");
   t.end();
 });
 
