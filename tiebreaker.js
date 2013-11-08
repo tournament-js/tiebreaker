@@ -232,31 +232,19 @@ TieBreaker.prototype.results = function () {
   });
   // NB: we do not care about stats from the matches apart from what it broke
 
-  // gpos correction helper
-  var getPlayersAboveInGroup = function (grpNum, gpos) {
-    return res.filter(function (r) {
-      return (r.grp === grpNum && r.gpos < gpos);
-    }).length;
-  };
-
   // inspect each group - and create xarys
   var posAry = this.posAry;
   var xarys = $.replicate(this.groupSize, []);
   var findMatch = this.findMatch.bind(this);
   $.range(this.numGroups).forEach(function (i) {
     var m = findMatch({ s:0, r: 1, m: i });
-    if (m && m.m) {
-      // make gpos correct for the scored r1 matches
-      Base.sorted(m).forEach(function (p, j) { // know this match is untied
-        var resEl = Base.resultEntry(res, p);
-        resEl.gpos = j + getPlayersAboveInGroup(m.id.m, resEl.gpos) + 1;
-      });
-    }
     // fill in xarys - either from what we had in posAry or break it up
     var seedAry = (m && m.m) ? splitSeedArray(posAry, m) : posAry[i-1];
-    seedAry.forEach(function (gxp) {
+    seedAry.forEach(function (gxp, x) {
       gxp.forEach(function (s) {
-        xarys[i-1].push(Base.resultEntry(res, s));
+        var resEl = Base.resultEntry(res, s);
+        resEl.gpos = x+1;
+        xarys[i-1].push(resEl);
       });
     });
   });
