@@ -1,6 +1,6 @@
 {
   "name": "tiebreaker",
-  "description": "A middle stage helper tournament to deal with the complexities of handling ties",
+  "description": "A middle stage tournament that deals with unexpected ties",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "version": "0.0.1",
   "repository": {
@@ -10,10 +10,11 @@
   "keywords": ["groupstage"],
   "main": "tiebreaker.js",
   "scripts": {
-    "test": "tap test/tb.gs.test.js"
+    "test": "tap test/*.js"
   },
   "dependencies": {
-    "interlude": "~1.0.2"
+    "interlude": "~1.0.2",
+    "tournament": "~0.20.0"
   },
   "devDependencies": {
     "tap": "~0.4.4",

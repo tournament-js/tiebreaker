@@ -1,4 +1,6 @@
 # TieBreaker
+[![Build Status](https://secure.travis-ci.org/clux/tiebreaker.png)](http://travis-ci.org/clux/tiebreaker)
+[![Dependency Status](https://david-dm.org/clux/tiebreaker.png)](https://david-dm.org/clux/tiebreaker)
 
     Stability: 1 - Experimental
 
