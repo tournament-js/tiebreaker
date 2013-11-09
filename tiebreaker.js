@@ -80,7 +80,9 @@ var updateSeedAry = function (seedAry, match) {
 // Interface
 //------------------------------------------------------------------
 
-function TieBreaker(oldRes, posAry, limit) {
+// TODO: opts.nonStrict default false
+// TODO: opts.mode default FFA (should be able to GS replace if nonStrict)
+function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, limit);
   }
