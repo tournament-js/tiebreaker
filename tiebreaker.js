@@ -2,42 +2,9 @@ var $ = require('interlude')
   , Base = require('tournament')
   , algs = require('./helpers');
 
-var invalid = function (oldRes, posAry, limit) {
-  if (!Array.isArray(oldRes)) {
-    return "results must be implemented";
-  }
-  if (!Array.isArray(posAry)) {
-    return "rawPositions must be implemented";
-  }
-  if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
-    return "limit must be an integer in the range {1, ... ,results.length-1}";
-  }
-  for (var i = 0; i < oldRes.length; i += 1) {
-    var r = oldRes[i];
-    var props = [r.seed, r.pts, r['for'], r.pos];
-    if (!props.every(Base.isInteger)) {
-      return "invalid results format - common properties missing";
-    }
-  }
-  var len = posAry[0].length;
-  for (var j = 0; j < posAry.length; j += 1) {
-    //if (!posAry[j].every(Base.isInteger)) {
-    // TODO: should check this, but need to map check to make work
-    //  return "invalid rawPositions - must all be integers"
-    //}
-    if (Math.abs(posAry[j].length - len) > 1) { // allow diff of 1
-      return "rawPositions must be equally long for every section";
-    }
-  }
-  return null;
-};
-
-var idString = function (id) {
-  if (id.r === 1) {
-    return "Group " + id.m + " tiebreaker";
-  }
-  return "Between groups tiebreaker";
-};
+//------------------------------------------------------------------
+// Match helpers
+//------------------------------------------------------------------
 
 /**
  * FFA tiebreakers
@@ -109,6 +76,10 @@ var updateSeedAry = function (seedAry, match) {
   return res;
 };
 
+//------------------------------------------------------------------
+// Interface
+//------------------------------------------------------------------
+
 function TieBreaker(oldRes, posAry, limit) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, limit);
@@ -124,7 +95,6 @@ function TieBreaker(oldRes, posAry, limit) {
   this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
   this.posAry = posAry;
   this.limit = limit;
-  // TODO: optionalize `gpos` key name
   this.oldRes = oldRes;
   Base.call(this, createMatches(this.posAry, limit));
   var pls = this.players();
@@ -145,22 +115,46 @@ function TieBreaker(oldRes, posAry, limit) {
 }
 Base.inherit(TieBreaker);
 
-TieBreaker.prototype._verify =  function (match, score) {
-  if ($.nub(score).length !== score.length) {
-    return "scores must unambiguously decide every position";
+//------------------------------------------------------------------
+// Static helpers
+//------------------------------------------------------------------
+
+// custom invalid that doesn't call inherited versions (because different ctor args)
+TieBreaker.invalid = function (oldRes, posAry, limit) {
+  if (!Array.isArray(oldRes)) {
+    return "results must be implemented";
+  }
+  if (!Array.isArray(posAry)) {
+    return "rawPositions must be implemented";
+  }
+  if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
+    return "limit must be an integer in the range {1, ... ,results.length-1}";
+  }
+  for (var i = 0; i < oldRes.length; i += 1) {
+    var r = oldRes[i];
+    var props = [r.seed, r.pts, r['for'], r.pos];
+    if (!props.every(Base.isInteger)) {
+      return "invalid results format - common properties missing";
+    }
+  }
+  var len = posAry[0].length;
+  for (var j = 0; j < posAry.length; j += 1) {
+    //if (!posAry[j].every(Base.isInteger)) {
+    // TODO: should check this, but need to map check to make work
+    //  return "invalid rawPositions - must all be integers"
+    //}
+    if (Math.abs(posAry[j].length - len) > 1) { // allow diff of 1
+      return "rawPositions must be equally long for every section";
+    }
   }
   return null;
 };
 
-TieBreaker.prototype._progress = function (match) {
-   // if id.r === 1, we need to move the player to r2 if it exists
-  var last = this.matches[this.matches.length-1];
-  if (match.id.r === 1 && last.id.r === 2) {
-    var position = Math.ceil(this.limit / this.numGroups);
-    var seedAry = updateSeedAry(this.posAry[match.id.m-1], match);
-    // TODO: splice in seedAry into posAry at index match.id.m-1?
-    last.p[match.id.m-1] = seedAry[position-1][0];
+TieBreaker.idString = function (id) {
+  if (id.r === 1) {
+    return "Group " + id.m + " tiebreaker";
   }
+  return "Between groups tiebreaker";
 };
 
 // custom from because TieBreaker has different constructor arguments
@@ -192,9 +186,27 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   return forwarded;
 };
 
-// custom invalid that doesn't call inherited statics (because different ctor args)
-TieBreaker.invalid = invalid;
-TieBreaker.idString = idString;
+//------------------------------------------------------------------
+// Expected methods
+//------------------------------------------------------------------
+
+TieBreaker.prototype._verify =  function (match, score) {
+  if ($.nub(score).length !== score.length) {
+    return "scores must unambiguously decide every position";
+  }
+  return null;
+};
+
+TieBreaker.prototype._progress = function (match) {
+   // if id.r === 1, we need to move the player to r2 if it exists
+  var last = this.matches[this.matches.length-1];
+  if (match.id.r === 1 && last.id.r === 2) {
+    var position = Math.ceil(this.limit / this.numGroups);
+    var seedAry = updateSeedAry(this.posAry[match.id.m-1], match);
+    // TODO: splice in seedAry into posAry at index match.id.m-1?
+    last.p[match.id.m-1] = seedAry[position-1][0];
+  }
+};
 
 // override results because we need to do it all from scratch
 TieBreaker.prototype.results = function () {
@@ -215,6 +227,7 @@ TieBreaker.prototype.results = function () {
     seedAry.forEach(function (gxp, x) {
       gxp.forEach(function (s) {
         var resEl = Base.resultEntry(res, s);
+        // TODO: optionalize `gpos` key name, 'tbin' ?
         resEl.gpos = x+1;
         xarys[i].push(resEl);
       });
