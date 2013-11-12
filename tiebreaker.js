@@ -28,7 +28,7 @@ var createMatches = function (posAry, limit) {
   var position = Math.ceil(limit / numSections);
   var ms = [];
   var rem = limit % numSections;
-  //console.log('lim pos', position);
+  //console.log('lim pos', position, posAry);
 
   // within section matches
   for (var k = 0; k < numSections; k += 1) {
@@ -82,6 +82,7 @@ var updateSeedAry = function (seedAry, match) {
 
 // TODO: opts.nonStrict default false
 // TODO: opts.mode default FFA (should be able to GS replace if nonStrict)
+// TODO: note that .pts not always present in results()
 function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, limit);
@@ -134,7 +135,7 @@ TieBreaker.invalid = function (oldRes, posAry, limit) {
   }
   for (var i = 0; i < oldRes.length; i += 1) {
     var r = oldRes[i];
-    var props = [r.seed, r.pts, r['for'], r.pos];
+    var props = [r.seed, r['for'], r.pos];
     if (!props.every(Base.isInteger)) {
       return "invalid results format - common properties missing";
     }
@@ -231,13 +232,14 @@ TieBreaker.prototype.results = function () {
         var resEl = Base.resultEntry(res, s);
         // TODO: optionalize `gpos` key name, 'tbin' ?
         resEl.gpos = x+1;
-        xarys[i].push(resEl);
+        xarys[x].push(resEl);
       });
     });
   });
 
   // inspect between section tiebreaker
   var r2g = this.findMatch({ s:0, r: 2, m: 1 });
+  // TODO: this SHOULD modify xarys[position-1]
   if (r2g && r2g.m) {
     r2g.p.forEach(function (p, i) {
       Base.resultEntry(res, p).tb = r2g.m[i];
@@ -245,6 +247,12 @@ TieBreaker.prototype.results = function () {
   }
   // TODO: doing this after r1 is bad - promoting too soon
   if (this.isDone()) {
+    //var a = xarys.map(function(xp){
+    //  return xp.map(function(r) {
+    //    return r.seed
+    //  });
+    //});
+    //throw new Error(JSON.stringify(a));
     algs.positionFromXarys(xarys, false);
   }
   return res.sort(algs.finalCompare);

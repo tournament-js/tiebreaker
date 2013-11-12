@@ -23,7 +23,7 @@ var tieCompute = function (ary, startPos, scoreBreak, cb) {
     pts = r.pts;
     scoreDiff = r.for - r.against;
     tbScore = r.tb;
-    cb(r, pos, i); // so we can do something with pos on r
+    cb(r, pos); // so we can do something with pos on r
   }
 };
 
@@ -42,6 +42,7 @@ exports.positionFromXarys = function (xarys, scoresBreak) {
 // priority: 1. points, 2. breakingDiff, 3. tbR2Points, 4. visualDiff, 5. seed
 // first 3 will end up breaking up `pos` attributes
 exports.compareResults = function (scoresBreak) {
+  // TODO: pts only relevant for groupStage
   return function (x, y) {
     if (x.pts !== y.pts) {
       return y.pts - x.pts;
