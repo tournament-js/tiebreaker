@@ -65,6 +65,7 @@ var updateSeedAry = function (seedAry, match) {
   seedAry.forEach(function (xps, x) {
     if (xps.indexOf(match.p[0]) >= 0) {
       // split match up into match.p.length new sets of xplacers
+      // TODO: nonStrict mode simply forces more logic here
       return Base.sorted(match).forEach(function (s, i) {
         res[x+i] = [s];
       });
@@ -98,14 +99,18 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   this.posAry = posAry;
   this.limit = limit;
   this.oldRes = oldRes;
-  Base.call(this, createMatches(this.posAry, limit));
-  var pls = this.players();
+  Base.call(this, oldRes.length, createMatches(this.posAry, limit));
 
-  // demote player positions until we are done
-  // TODO: this SHOULD REALLY be done in groupstage
-  // because if we happen to try to forward an amount that matches up, we may
-  // forward severly unfairly (based on tied xplacers)
-  this.numPlayers = pls.length; // need to match uph
+  // Demote player positions until we are done
+
+  // NB: because demotion only happens here, and not in results in previous tourney,
+  // it is possible to forward from only one section when tiebreaker is bypassed.
+  // This is problematic, but demoting everywhere, or forcing tiebreaker usage is
+  // equally silly. Thus, it is recommended to go through TieBreaker,
+  // but ultimately leave it up to the user.
+
+  var pls = this.players(); // the players that are actually in matches here
+  this.numPlayers = pls.length; // override this.numPlayers set via Base.call(this)
   var playersGuaranteed = oldRes.filter(function (r) {
     return pls.indexOf(r.seed) < 0 && r.pos <= limit;
   }).length;
@@ -126,37 +131,36 @@ TieBreaker.invalid = function (oldRes, posAry, limit) {
   if (!Array.isArray(oldRes)) {
     return "results must be implemented";
   }
-  if (!Array.isArray(posAry)) {
-    return "rawPositions must be implemented";
+  if (!Array.isArray(posAry) || !posAry.length) {
+    return "rawPositions must be implemented properly";
   }
   if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
     return "limit must be an integer in the range {1, ... ,results.length-1}";
   }
-  for (var i = 0; i < oldRes.length; i += 1) {
-    var r = oldRes[i];
-    var props = [r.seed, r['for'], r.pos];
-    if (!props.every(Base.isInteger)) {
+  oldRes.forEach(function (r) {
+    if (![r.seed, r['for'], r.pos].every(Base.isInteger)) {
       return "invalid results format - common properties missing";
     }
-  }
+  });
   var len = posAry[0].length;
-  for (var j = 0; j < posAry.length; j += 1) {
-    //if (!posAry[j].every(Base.isInteger)) {
-    // TODO: should check this, but need to map check to make work
-    //  return "invalid rawPositions - must all be integers"
-    //}
-    if (Math.abs(posAry[j].length - len) > 1) { // allow diff of 1
+  posAry.forEach(function (seedAry) {
+    seedAry.forEach(function (p) {
+      if (!Base.isInteger(p) || p <= Base.NONE) {
+        return "invalid rawPositions - all entries must be arrays of integers";
+      }
+    });
+    if (Math.abs(seedAry.length - len) > 1) { // allow diff of 1
       return "rawPositions must be equally long for every section";
     }
-  }
+  });
   return null;
 };
 
 TieBreaker.idString = function (id) {
   if (id.r === 1) {
-    return "Group " + id.m + " tiebreaker";
+    return "S " + id.m + " TB";
   }
-  return "Between groups tiebreaker";
+  return "R2 TB";
 };
 
 // custom from because TieBreaker has different constructor arguments
@@ -173,7 +177,9 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   //  return r.pos <= numPlayers;
   //});
   //if (luckies.length === numPlayers) {
-  //  console.warn('unnecessary %dp TieBreaker construction from', numPlayers, inst.name);
+  //  console.warn('unnecessary %dp TieBreaker construction from',
+  //    numPlayers, inst.name
+  //  );
   //  console.log(res);
   //}
   if (!inst.rawPositions) {
