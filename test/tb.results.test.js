@@ -34,9 +34,9 @@ test("8 4 with 2x three-way tie results", function (t) {
   var res = gs.results();
   t.deepEqual(res.map(makeStr), [
       "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
-      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=2",
-      "P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=2",
-      "P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=2",
+      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1",
+      "P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1",
+      "P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1",
       "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5",
       "P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5",
       "P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5",
