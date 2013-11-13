@@ -1,6 +1,5 @@
 var $ = require('interlude')
-  , Base = require('tournament')
-  , algs = require('./helpers');
+  , Base = require('tournament');
 
 //------------------------------------------------------------------
 // Match helpers
@@ -211,6 +210,55 @@ TieBreaker.prototype._progress = function (match) {
   }
 };
 
+// we only use tieCompute break up xplacers if there was R2 tiebreakers
+// TODO: so only check for the TB condition (will break SOME tests)
+var tieCompute = function (resAry, startPos, cb) {
+  Base.resTieCompute(resAry, startPos, cb, function (r) {
+    var val = "PTS" + r.pts;
+    if (r.tb) {
+      val += "TB" + r.tb;
+    }
+    return val;
+  });
+  //Base.resTieCompute(resAry, startPos, cb, $.get('tb'));
+};
+
+var compareResults = function (x, y) {
+  if (x.pts !== y.pts) {
+    return y.pts - x.pts;
+  }
+  if (x.tb != null && y.tb != null) {
+    return y.tb - x.tb;
+  }
+  var xScore = x.for - (x.against || 0);
+  var yScore = y.for - (y.against || 0);
+  var scoreDiff = yScore - xScore;
+
+  return scoreDiff || (x.seed - y.seed);
+};
+
+var finalCompare = function (x, y) {
+  if (x.pos !== y.pos) {
+    return x.pos - y.pos;
+  }
+  return compareResults(x, y);
+};
+
+var positionAcross = function (xarys) {
+  // tieCompute across groups via xplacers to get the `pos` attribute
+  var posctr = 0;
+  xarys.forEach(function (xplacers) {
+    xplacers.sort(compareResults);
+    // same as the FFA/GroupStage except we can split up ties between
+    // sections by construction (R2 breakers require this)
+    // TODO: maybe shouldn't do it for pts?
+    tieCompute(xplacers, posctr, function (r, pos) {
+      r.pos = pos;
+    });
+    posctr += xplacers.length;
+  });
+};
+
 // override results because we need to do it all from scratch
 TieBreaker.prototype.results = function () {
   var res = this.oldRes.map(function (r) {
@@ -247,15 +295,10 @@ TieBreaker.prototype.results = function () {
   }
   // TODO: doing this after r1 is bad - promoting too soon
   if (this.isDone()) {
-    //var a = xarys.map(function(xp){
-    //  return xp.map(function(r) {
-    //    return r.seed
-    //  });
-    //});
-    //throw new Error(JSON.stringify(a));
-    algs.positionFromXarys(xarys, false);
+    positionAcross(xarys);
   }
-  return res.sort(algs.finalCompare);
+
+  return res.sort(finalCompare);
 };
 
 module.exports = TieBreaker;
