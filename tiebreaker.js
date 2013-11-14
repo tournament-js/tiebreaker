@@ -82,7 +82,6 @@ var updateSeedAry = function (seedAry, match) {
 
 // TODO: opts.nonStrict default false
 // TODO: opts.mode default FFA (should be able to GS replace if nonStrict)
-// TODO: note that .pts not always present in results()
 function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, limit);
@@ -174,25 +173,13 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   if (res.length < numPlayers) {
     throw new Error(err + "not enough players");
   }
-  //var luckies = res.filter(function (r) {
-  //  return r.pos <= numPlayers;
-  //});
-  //if (luckies.length === numPlayers) {
-  //  console.warn('unnecessary %dp TieBreaker construction from',
-  //    numPlayers, inst.name
-  //  );
-  //  console.log(res);
-  //}
   if (!inst.rawPositions) {
     throw new Error(inst.name + " does not implement rawPositions");
   }
   var posAry = inst.rawPositions(res);
-  //console.log(numPlayers, posAry);
 
-  // NB: construction automatically guards on invalid
-  var forwarded = new TieBreaker(res, posAry, numPlayers, opts);
   // NB: no replacing for TieBreaker, everything read from results
-  return forwarded;
+  return new TieBreaker(res, posAry, numPlayers, opts);
 };
 
 //------------------------------------------------------------------
@@ -218,17 +205,12 @@ TieBreaker.prototype._progress = function (match) {
 };
 
 var compareResults = function (x, y) {
-  if (x.pts !== y.pts) {
-    return y.pts - x.pts;
-  }
   if (x.tb != null && y.tb != null) {
     return y.tb - x.tb;
   }
   var xScore = x.for - (x.against || 0);
   var yScore = y.for - (y.against || 0);
-  var scoreDiff = yScore - xScore;
-
-  return scoreDiff || (x.seed - y.seed);
+  return (y.pts - x.pts) || (yScore - xScore) || (x.seed - y.seed);
 };
 
 var finalCompare = function (x, y) {
@@ -268,11 +250,8 @@ TieBreaker.prototype.results = function () {
   var findMatch = this.findMatch.bind(this);
   this.posAry.forEach(function (seedAry, i) {
     var m = findMatch({ s:0, r: 1, m: i+1 });
-    if (m && m.m) {
-      seedAry = updateSeedAry(seedAry, m);
-    }
     // fill in xarys - either from what we had in posAry or break it up
-    seedAry.forEach(function (gxp, x) {
+    ((m && m.m) ? updateSeedAry(seedAry, m) : seedAry).forEach(function (gxp, x) {
       gxp.forEach(function (s) {
         var resEl = Base.resultEntry(res, s);
         resEl.gpos = x+1;
@@ -288,6 +267,7 @@ TieBreaker.prototype.results = function () {
       Base.resultEntry(res, p).tb = r2g.m[i];
     });
   }
+
   if (this.isDone()) {
     positionAcross(xarys);
   }
