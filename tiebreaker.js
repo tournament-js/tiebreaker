@@ -106,8 +106,9 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   // NB: because demotion only happens here, and not in results in previous tourney,
   // it is possible to forward from only one section when tiebreaker is bypassed.
   // This is problematic, but demoting everywhere, or forcing tiebreaker usage is
-  // equally silly. Thus, it is recommended to go through TieBreaker,
-  // but ultimately leave it up to the user.
+  // equally silly: demotion can only happen on the cluster we want, otherwise we
+  // could never make any inferences of position.
+  // Thus, it is recommended to go through TieBreaker, but left up to the user.
 
   var pls = this.players(); // the players that are actually in matches here
   this.numPlayers = pls.length; // override this.numPlayers set via Base.call(this)
@@ -216,19 +217,6 @@ TieBreaker.prototype._progress = function (match) {
   }
 };
 
-// we only use tieCompute break up xplacers if there was R2 tiebreakers
-// TODO: so only check for the TB condition (will break SOME tests)
-var tieCompute = function (resAry, startPos, cb) {
-  Base.resTieCompute(resAry, startPos, cb, function (r) {
-    var val = "PTS" + r.pts;
-    if (r.tb) {
-      val += "TB" + r.tb;
-    }
-    return val;
-  });
-  //Base.resTieCompute(resAry, startPos, cb, $.get('tb'));
-};
-
 var compareResults = function (x, y) {
   if (x.pts !== y.pts) {
     return y.pts - x.pts;
@@ -250,14 +238,17 @@ var finalCompare = function (x, y) {
   return compareResults(x, y);
 };
 
+// we only use tieCompute break up xplacers if there were R2 tiebreakers
+var tieCompute = function (resAry, startPos, cb) {
+  Base.resTieCompute(resAry, startPos, cb, $.get('tb'));
+};
+
 var positionAcross = function (xarys) {
   // tieCompute across groups via xplacers to get the `pos` attribute
+  // same as GroupStage procedure except we can split up ties between sections in R2
   var posctr = 0;
   xarys.forEach(function (xplacers) {
     xplacers.sort(compareResults);
-    // same as the FFA/GroupStage except we can split up ties between
-    // sections by construction (R2 breakers require this)
-    // TODO: maybe shouldn't do it for pts?
     tieCompute(xplacers, posctr, function (r, pos) {
       r.pos = pos;
     });
@@ -284,7 +275,6 @@ TieBreaker.prototype.results = function () {
     seedAry.forEach(function (gxp, x) {
       gxp.forEach(function (s) {
         var resEl = Base.resultEntry(res, s);
-        // TODO: optionalize `gpos` key name, 'tbin' ?
         resEl.gpos = x+1;
         xarys[x].push(resEl);
       });
@@ -293,13 +283,11 @@ TieBreaker.prototype.results = function () {
 
   // inspect between section tiebreaker
   var r2g = this.findMatch({ s:0, r: 2, m: 1 });
-  // TODO: this SHOULD modify xarys[position-1]
   if (r2g && r2g.m) {
     r2g.p.forEach(function (p, i) {
       Base.resultEntry(res, p).tb = r2g.m[i];
     });
   }
-  // TODO: doing this after r1 is bad - promoting too soon
   if (this.isDone()) {
     positionAcross(xarys);
   }
