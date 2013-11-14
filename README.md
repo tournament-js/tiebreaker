@@ -91,9 +91,11 @@ Results out from a `TieBreaker` instance are identical to the results received f
 
 - Until the TieBreaker is done - we demote players in the TieBreaker to an assumed worst outcome
 - After TieBreaker is done - we can safely pick the top `n` (fairly) by simply filtering by `r.pos <= n`
+- The `gpos` attributes are only modified as a result of round one tiebreakers
+- The `pos` attributes are built up like `GroupStage`, but also broken up by the round two tiebreaker if it exists
 
 ### Extras
-TieBreaker (though it implements `results` and `from` slightly differently than any other tournament) is still a valid [tournament](https://npmjs.org/package/tournament). All the methods available on the base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/blob/master/doc/base.md)
+TieBreaker (though it implements `results` and `from` slightly differently than any other tournament) is still a valid [tournament](https://npmjs.org/package/tournament). All the methods available on the base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/master/blob/doc/base.md)
 
 ## License
 MIT-Licensed. See LICENSE file for details.
