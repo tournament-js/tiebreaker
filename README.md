@@ -62,17 +62,30 @@ tb.matches;
   { id: { s: 0, r: 1, m: 2 }, // group 2 tiebreaker
     p: [ 3, 4, 7 ] },
   { id: { s: 0, r: 2, m: 1 }, // between group tiebreaker
-    p: [ 0, 0 ] } ] // will be filled in with [2nd from g1tb, 1st from g2tb]
+    p: [ 0, 0 ] } ]
+
+tb.score(tb.matches[0].id, [3,2,1]);
+tb.score(tb.matches[1].id, [3,2,1]);
+tb.matches[2];
+{ id: { s: 0, r: 2, m: 1 }, // between group tiebreaker
+    p: [ 2, 3 ] } // 2nd placer in g1tb vs. 1st placer in g2tb
 ```
 
-This uses the example ties above. Different amount of players to pick means different matches - TieBreaker only breaks when required.
+This uses the example ties above. Because we requested 3 players, it created the extra between groups `TieBreaker`.
 
-### Scoring
-Like every other tournament.
+### Options
+None at the moment, but we have some plans:
+
+- allow matches to be in `GroupStage` form rather than FFA matches
+- allow ties in TieBreakers (but may have to tiebreak again in this case)
+
+This may or may not be implemented at some point soon.
 
 ### Viewing results
-TODO: talk about pos demotion
-TODO: talk about how we just modify the parent results object's positions
+Results out from a `TieBreaker` instance are identical to the results received from the tournament we are breaking. The only difference is that we modify the `pos` attributes in two ways:
+
+- Until the TieBreaker is done - we demote players in the TieBreaker to an assumed worst outcome
+- After TieBreaker is done - we can safely pick the top `n` (fairly) by simply filtering by `r.pos <= n`
 
 ## License
 MIT-Licensed. See LICENSE file for details.
