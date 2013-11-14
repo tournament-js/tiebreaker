@@ -2,194 +2,77 @@
 [![Build Status](https://secure.travis-ci.org/clux/tiebreaker.png)](http://travis-ci.org/clux/tiebreaker)
 [![Dependency Status](https://david-dm.org/clux/tiebreaker.png)](https://david-dm.org/clux/tiebreaker)
 
-    Stability: 1 - Experimental
-
-## NB DOCS OUTDATED
-WILL UNDERGO A LOT OF CHANGES SOON.
-
-This doc simply describes the problem from the groupstage perspective.
+    Stability: 2 - Unstable
 
 ## Overview
-The `TieBreaker` class is a tournament type that slightly differs from all the others, in that it cannot be created from scratch, but rather from the results of a finished `GroupStage` only. To see why this tournament type is better to have than just a `limit` parameter for `GroupStage` consider the following.
+TieBreaker deals with between _groups_ and within _groups_ ties in tournaments that has group-like equivalents. Such tournaments include:
 
-## GroupStage Results
-Unlike every other tournament type, `GroupStage` cannot give out current positions in `results()` via the `.pos` attribute. This is because so many different combinations of ties are possible - both within groups, and between groups - that winning a few matches may not always result in a net increase in `.pos`. Instead, `GroupStage` needs all the matches played before `.pos` and `gpos` is calculated.
+- [GroupStage](https://npmjs.org/package/groupstage)
+- [FFA](https://npmjs.org/package/ffa) (when using a multiple match final round)
 
-To illustrate the current behaviour, consider a fully scored 8 players `GroupStage` with 2 groups of 4 players in each, i.e. `new GroupStage(8, 4)`. This will create groups via `t.groups(8,4)` and round robin schedule each group via `t.robin(4, playerAry)` i.e. 6 matches over 3 rounds per group.
+But `TieBreaker` will break ties for any tournament that implements `rawPositions`, a special method that converts results into a raw array of ties.
 
-We score:
+## Problem
+Suppose you have a difficult tie situation in a `GroupStage` 8 players in groups of 4. Without going into detail, it is fairly easy to end up in a situation (check test scenarios) where you have two different three way ties:
 
-- group 1 so that round 1 matches are scored `[1,0]` and every other match `[0,1]`.
-- group 2 so that round 4 matches are scored `[1,0]` and every other match `[0,1]`.
+- group 1: 1st: [1,2,6], 4th: [8]
+- group 2: 1st: [5], 2nd: [3,4,7]
 
-This **forces two different three-way ties** within each group.
+This is problematic because if we get the results from `GroupStage`, it will see that [1,2,5,6] are all 1st placers, and thus all tie their `resEl.pos` attributes at `1`.
+If we wanted the top 4 to proceed to a different tournament we would end up picking 3 players from group one and 1 player from group two, which is awful.
 
-Here is what `.results()` outputs after such scoring (here the output have been partitioned by group, and had the `wins`, `draws` and `losses` properties removed for readibility).
+## Solution
+Create a match for each group we need to break, and optionally break each groups x-placers at the advancement point.
 
-```js
-g1:
- [ { seed: 3, maps: 3, pts: 9, pos: 1, gpos: 1, grp: 1 },
-  { seed: 1, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 6, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 8, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 } ]
-g2:
- [ { seed: 4, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 5, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 7, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 2, maps: 0, pts: 0, pos: 8, gpos: 4, grp: 2 } ]
-```
+### Example
+This is best explained through example. Assume ties like above:
 
-So this is pretty awful for advancing any number of players to another tournament.
-Even if we broke by maps via `gs.results({mapsBreak:true})`, it would not have made a difference here because every map score was either `1` or `0`.
+#### Require top 4
+Then need to break:
 
-## Problem with `limit`
-We could try to bolt on this TieBreaker functionality inside the `GroupStage` class by adding the optional `limit` parameter that some tournament types have implemented, but this would:
+- 1st place cluster [1,2,6] - then pick top 2
+- 2nd place cluster [3,4,7] - then pick winner
 
-- add a lot of unnecessary complexity for a problem that may ultimately be solved in many ways
-- remove/obscure a fundamental property of all tournament types: rescorability
+That gives 3/4 to proceed, and the last is 5 who won his group alone and is guaranteed through.
 
-Turns out `TieBreaker` needed more logic than the actual `GroupStage`, and that was just for the very simplistic way of solving the problem.
+#### Require top 2
+Then only need to break the 2nd place cluster, because we know 5 is one of the top 2.
 
-If matches are allowed to be rescored then it having `GroupStage` under the covers to a lot of work to work out new tiebreaker scenarios and potentially wipe out old scores in them is really silly.
+#### Require top 3 (silly case)
+The stupid case where we requested a non-multiple of the number of groups. In this case we need to distinguish the top 4, so we break as if we wanted top 4, then:
 
-## TieBreaker Tournament
-The decision was therefore instead to add an entirely new tournament type, and have the final results of the `GroupStage` passed in to indicate that the `GroupStage` is now effectively frozen.
+- Break between clusters: 2nd placers from [1,2,6] and 1st placers from [3,4,7]
 
-## TieBreaker Algorithm
-`TieBreaker` solves the problem of both within-group and between group ties on a need-to-break basis: you specify how many players you want to forward to the next tournament, and the `TieBreaker` constructor creates the least amount of matches necessary to determine this.
+The winner of this will be 3rd.
 
-The idea is simple: if you to forward `p` players from a `GroupStage` containing `n` players, then you need to find the top `p/numGroups` from each group and forward these.
+Note that you probably should never do this. Picking a multiple of the number of groups is always the most sensible approach. Besides, the tournaments you will pipe the top `n` to will take care of the extra matches required anyway.
 
-If `p` divides `numGroups` then you only need to ensure each group is sufficiently untied that we can take an equal amount from each.
-If `p` does not divide `numGroups`, then you also have to do a tiebreaker match between groups - i.e. if you have 12 players in groups of 4, and you want the top 4, then you have to take the winners of each group, and one of the 2nd placers in each group.
-
-The `TieBreaker` tournament creates matches in round 1 (within group tiebreakers) for clusters of tied players at the border of `p/numGroups` - unless these clusters already are guaranteed to go through (future examples explain this better).
-
-Then, it creates a blank round 2 match for the between group tiebreaker that will be filled in once the actual group results have been sufficiently determined. In the 12 players example this would put the three 2nd placers in the between group match.
-
-At the end of the tournament, you can call `results()` like any other tournament, and the first `p` entries in the resulting list will be the ones to advance.
-
-## Example
-Consider the example continued from above with 8 players in groups of 4 with two three-way ties where the results (partitioned by group) looks like this:
+## Usage
+### Creation
+Unlike every other tournament type, this tournament CAN NOT be created directly. It needs a finished tournament instance to be created from, and the number of players we want to pick from this tournament:
 
 ```js
-g1:
- [ { seed: 3, maps: 3, pts: 9, pos: 1, gpos: 1, grp: 1 },
-  { seed: 1, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 6, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 8, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 } ]
-g2:
- [ { seed: 4, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 5, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 7, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 2, maps: 0, pts: 0, pos: 8, gpos: 4, grp: 2 } ]
-```
+var gs = new GroupStage(8, 4);
+// score gs here so that gs.isDone();
 
-I.e. the final `GroupStage` group positions were:
-
-- group 1: 1st: [3], 2nd: [1,6,8]
-- group 2: 1st: [4,5,7], 4th: [2]
-
-So if we want the top six to advance, then we need to split up the cluster in group 1:
-
-```js
-var tb = new TieBreaker(gs.results(), 6);
+var tb = TieBreaker.from(gs, 3); // want the top 3
 tb.matches;
-[ { id: { s: 0, r: 1, m: 1 }, p: [ 1, 6, 8 ] } ]
+[ { id: { s: 0, r: 1, m: 1 }, // group 1 tiebreaker
+    p: [ 1, 2, 6 ] },
+  { id: { s: 0, r: 1, m: 2 }, // group 2 tiebreaker
+    p: [ 3, 4, 7 ] },
+  { id: { s: 0, r: 2, m: 1 }, // between group tiebreaker
+    p: [ 0, 0 ] } ] // will be filled in with [2nd from g1tb, 1st from g2tb]
 ```
 
-Only the first three-way tie between players [1,6,8] must be resolved. The three way tie between [4,6,7] is irrelevant because if you want the top 6, you still get the top 3 from each group as expected.
+This uses the example ties above. Different amount of players to pick means different matches - TieBreaker only breaks when required.
 
-However, if you requested the top 4:
+### Scoring
+Like every other tournament.
 
-```js
-var tb = new TieBreaker(gs.results(), 4);
-tb.matches;
-[ { id: { s: 0, r: 1, m: 1 }, p: [ 1, 6, 8 ] },
-  { id: { s: 0, r: 1, m: 2 }, p: [ 4, 5, 7 ] } ]
-```
+### Viewing results
+TODO: talk about pos demotion
+TODO: talk about how we just modify the parent results object's positions
 
-Both three-way ties must here be resolved.
-
-### Pathological Case
-An even more complicated case is when you want to advance a number that is not actually a multiple of the number of groups:
-
-```js
-var tb = new TieBreaker(gs.results(), 5);
-tb.matches;
-[ { id: { s: 0, r: 1, m: 1 }, p: [ 1, 6, 8 ] },
-  { id: { s: 0, r: 1, m: 2 }, p: [ 4, 5, 7 ] },
-  { id: { s: 0, r: 2, m: 1 }, p: [ 0, 0 ] } ]
-```
-
-You may never want this, but if you do, be advised that this may cause an extra match to take place AFTER all the within group tiebreakers (if any) have been resolved.
-
-By convention, the within group tiebreakers are in round 1 (r:1) and the between group tiebreakers are in round 2. The player array for the last match will be populated at the end of round 1 like in an `FFA` elimination tournament.
-
-### Example Results
-`TieBreaker` tournaments follow the module's convention and can generate `.results()` as well.
-These results look almost exactly like the ones returned from `GroupStage`, but they will update the `.pos`, `.gops` property for all affected players (which is not necessarily just the players in `tb.matches`), as well as sort the results based on the final `.pos` property.
-
-And, like other tournaments, you can request to get these results at any time, but before at least round 1 is done you simply get the old `GroupStage` results back.
-
-NB: any `results()`  will omit the `wins`, `draws` and `losses` properties for readibility.
-
-Before we score anything in `tb` the results will be the unchanged:
-
-
-```js
-[ { seed: 3, maps: 3, pts: 9, pos: 1, gpos: 1, grp: 1 },
-  { seed: 4, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 5, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 7, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 1, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 6, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 8, maps: 1, pts: 3, pos: 5, gpos: 2, grp: 1 },
-  { seed: 2, maps: 0, pts: 0, pos: 8, gpos: 4, grp: 2 } ]
-```
-
-If we score the round one tiebreakers `[3,2,1]` each (i.e. better seed => better score),
-then the groups are fully unbroken become fully unbroken:
-
-```js
-[ { seed: 3, maps: 3, pts: 9, pos: 1, gpos: 1, grp: 1 },
-  { seed: 4, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 5, maps: 2, pts: 6, pos: 3, gpos: 2, grp: 2 },
-  { seed: 1, maps: 1, pts: 3, pos: 4, gpos: 2, grp: 1 },
-  { seed: 7, maps: 2, pts: 6, pos: 5, gpos: 3, grp: 2 },
-  { seed: 6, maps: 1, pts: 3, pos: 5, gpos: 3, grp: 1 },
-  { seed: 8, maps: 1, pts: 3, pos: 7, gpos: 4, grp: 1 },
-  { seed: 2, maps: 0, pts: 0, pos: 8, gpos: 4, grp: 2 } ]
-```
-
-Since in this case we wanted the top 5, the system has not yet determined if seed 6 or 7 get the 5th place for themselves, so they are currently tied at this.
-
-We can see that `tb.matches` has updated the last match:
-
-```js
-tb.matches[2];
-{ id: { s: 0, r: 2, m: 1 }, p: [ 6, 7 ] }
-```
-
-So if we score this match `[2,1]` say, then seed 6 should take the 5th place and knock seed 7 down to 6th.
-
-```js
-tb.isDone(); // false
-tb.score(tb.matches[2].id, [2,1]);
-tb.results();
-[ { seed: 3, maps: 3, pts: 9, pos: 1, gpos: 1, grp: 1 },
-  { seed: 4, maps: 2, pts: 6, pos: 2, gpos: 1, grp: 2 },
-  { seed: 5, maps: 2, pts: 6, pos: 3, gpos: 2, grp: 2 },
-  { seed: 1, maps: 1, pts: 3, pos: 4, gpos: 2, grp: 1 },
-  { seed: 6, maps: 1, pts: 3, pos: 5, gpos: 3, grp: 1 },
-  { seed: 7, maps: 2, pts: 6, pos: 6, gpos: 3, grp: 2 },
-  { seed: 8, maps: 1, pts: 3, pos: 7, gpos: 4, grp: 1 },
-  { seed: 2, maps: 0, pts: 0, pos: 8, gpos: 4, grp: 2 } ]
-tb.isDone(); // true
-tb.results().slice(0,5).map(function (r) {
-  return r.seed;
-}); // these players can proceed to another tournament
-[ 3, 4, 5, 1, 6 ]
-```
-
-Note that once `isDone()` returns true we can safely pick the top 5 here.
+## License
+MIT-Licensed. See LICENSE file for details.
