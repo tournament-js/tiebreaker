@@ -2,12 +2,15 @@
   "name": "tiebreaker",
   "description": "A middle stage tournament that deals with unexpected ties",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "clux/tiebreaker"
   },
-  "keywords": ["groupstage", "ffa"],
+  "keywords": [
+    "groupstage",
+    "ffa"
+  ],
   "main": "tiebreaker.js",
   "scripts": {
     "test": "tap test/*.js"
