@@ -101,6 +101,12 @@ test("ffa unbalanced continuation", function (t) {
   t.ok(tb.isDone(), 'tb done now');
 
   var tbRes = tb.results();
+  t.deepEqual(ffa.rawPositions(tbRes), [
+      [[1],[2],[6],[8]],
+      [[5],[3],[4],[7]]
+    ], 'posAry after tb - all broken'
+  );
+
   var top4 = $.pluck('seed', tbRes.slice(0, 4));
   t.deepEqual(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
 
