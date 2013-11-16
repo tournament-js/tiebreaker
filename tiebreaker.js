@@ -6,20 +6,13 @@ var $ = require('interlude')
 //------------------------------------------------------------------
 
 /**
- * FFA tiebreakers
- *
- * creates 2 kind of tiebreakers
+ * This creates 2 kind of tiebreakers
  * 1. Within sections (necessary for the latter)
  * 2. Between sections
  *
- * Because of the complexity of possibly doing the tiebreaker matches
- * in a non-FFA format is astounding (ties force more tbs),
- * we leave this up to the host and enforce no ties in each match.
- *
- * Thus we only provide at most 2 matches for each player:
- * 1. One match FOR EACH SECTION (if needed) to break each group/section
- * 2. One match for the between section x-placers if numSections%limit !== 0
- *
+ * This will cause at most two FFA matches || mini subgroupstages for each player:
+ * 1. One for the group/section cluster (to break on gpos) if needed
+ * 2. One for the between group/section cluster of xplacers (limit % numSections > 0)
  */
 
 var createMatches = function (posAry, limit) {
@@ -36,7 +29,6 @@ var createMatches = function (posAry, limit) {
     // need a match in this section if no clear position-placer
 
     for (var i = 0; unchosen > 0; i += 1) {
-      // TODO: new loop can crash here if badly created posAry
       var xps = seedAry[i];
       var needForBetween = xps.length > 1 && xps.length === unchosen && rem > 0;
       if (xps.length > unchosen || needForBetween) {
@@ -82,12 +74,11 @@ var updateSeedAry = function (seedAry, match) {
 // Interface
 //------------------------------------------------------------------
 
-// TODO: opts.nonStrict default false
-// TODO: opts.mode default FFA (should be able to GS replace if nonStrict)
 function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
-    return new TieBreaker(oldRes, limit);
+    return new TieBreaker(oldRes, posAry, limit, opts);
   }
+  opts = TieBreaker.defaults(opts);
   var invReason = TieBreaker.invalid(oldRes, posAry, opts, limit);
   if (invReason !== null) {
     console.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
@@ -95,7 +86,6 @@ function TieBreaker(oldRes, posAry, limit, opts) {
     );
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
-  opts = TieBreaker.defaults(opts);
   this.nonStrict = opts.nonStrict;
   this.numGroups = posAry.length; // TODO: rename to numSections
   this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
@@ -144,6 +134,7 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
     }
   });
   var len = posAry[0].length;
+  var s0Len = $.flatten(posAry[0]).length;
   posAry.forEach(function (seedAry) {
     seedAry.forEach(function (p) {
       if (!Base.isInteger(p) || p <= Base.NONE) {
@@ -151,7 +142,10 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
       }
     });
     if (Math.abs(seedAry.length - len) > 1) { // allow diff of 1
-      return "rawPositions must be equally long for every section";
+      return "rawPositions must be ~equally long for every section";
+    }
+    if (Math.abs($.flatten(seedAry).length - s0Len) > 1) { // ditto
+      return "rawPositions must contain ~equally many players per section";
     }
   });
   return null;
@@ -159,7 +153,9 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 
 TieBreaker.defaults = function (opts) {
   opts = opts || {};
-  opts.nonStrict = Boolean(opts.nonStrict);
+  opts.subgrouped = Boolean(opts.subgrouped);
+  // NB: subgrouped tiebreakers MUST be nonStrict
+  opts.nonStrict = Boolean(opts.nonStrict) || opts.subgrouped;
   return opts;
 };
 
@@ -201,7 +197,7 @@ TieBreaker.prototype._verify =  function (match, score) {
 };
 
 TieBreaker.prototype._progress = function (match) {
-   // if id.r === 1, we need to move the player to r2 if it exists
+  // within section done ? => need to move the player to between section if it exists
   var last = this.matches[this.matches.length-1];
   if (match.id.r === 1 && last.id.r === 2) {
     var position = Math.ceil(this.limit / this.numGroups);
@@ -265,10 +261,10 @@ TieBreaker.prototype.results = function () {
   });
 
   // inspect between section tiebreaker
-  var r2g = this.findMatch({ s:0, r: 2, m: 1 });
-  if (r2g && r2g.m) {
-    r2g.p.forEach(function (p, i) {
-      Base.resultEntry(res, p).tb = r2g.m[i];
+  var betweenMatch = this.findMatch({ s:0, r: 2, m: 1 });
+  if (betweenMatch && betweenMatch.m) {
+    betweenMatch.p.forEach(function (p, i) {
+      Base.resultEntry(res, p).tb = betweenMatch.m[i];
     });
   }
 
