@@ -245,13 +245,10 @@ TieBreaker.prototype.results = function () {
   });
   // NB: we do not care about stats from the matches apart from what it broke
 
-  // inspect within section tiebreakers - and create xplacers arrays
+  // gposition based on updated posAry from rawPositions - and create xarys
   var xarys = $.replicate(this.groupSize, []);
-  var findMatch = this.findMatch.bind(this);
-  this.posAry.forEach(function (seedAry, i) {
-    var m = findMatch({ s:0, r: 1, m: i+1 });
-    // fill in xarys - either from what we had in posAry or break it up
-    ((m && m.m) ? updateSeedAry(seedAry, m) : seedAry).forEach(function (gxp, x) {
+  this.rawPositions().forEach(function (seedAry) {
+    seedAry.forEach(function (gxp, x) {
       gxp.forEach(function (s) {
         var resEl = Base.resultEntry(res, s);
         resEl.gpos = x+1;
@@ -273,6 +270,14 @@ TieBreaker.prototype.results = function () {
   }
 
   return res.sort(finalCompare);
+};
+
+TieBreaker.prototype.rawPositions = function () {
+  var findMatch = this.findMatch.bind(this);
+  return this.posAry.map(function (seedAry, i) {
+    var m = findMatch({ s:0, r: 1, m: i+1 });
+    return (m && m.m) ? updateSeedAry(seedAry, m) : seedAry.slice();
+  });
 };
 
 module.exports = TieBreaker;
