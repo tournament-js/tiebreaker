@@ -32,10 +32,9 @@ test("ffa 8 [4] limit 4", function (t) {
   var tb = TieBreaker.from(ffa, 1);
   var tbms = tb.matches;
   t.equal(tbms.length, 2, "matches in tb");
-  t.equal(tbms[0].id.r, 1, "first is a round one match");
+  t.equal(tbms[0].id.s, 1, "first is s1 ffa match");
   t.deepEqual(tbms[0].p, [1, 3], "containing tied in match 1");
-  t.equal(tbms[0].id.m, 1, "thus it is the section one within breaker");
-  t.equal(tbms[1].id.r, 2, 'second match is the between breaker');
+  t.equal(tbms[1].id.s, 3, 'second match is the between breaker');
   t.deepEqual(tbms[1].p, [0, 2], 'which waits for winner of tbms[0]');
   tb.score(tbms[0].id, [2,1]);
   t.deepEqual(tbms[1].p, [1, 2], 'no longer waiting');

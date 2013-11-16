@@ -32,7 +32,7 @@ var createMatches = function (posAry, limit) {
       var xps = seedAry[i];
       var needForBetween = xps.length > 1 && xps.length === unchosen && rem > 0;
       if (xps.length > unchosen || needForBetween) {
-        ms.push({ id: { s: 0, r: 1, m: k+1 }, p: xps.slice() });
+        ms.push({ id: { s: k+1, r: 1, m: 1 }, p: xps.slice() });
         break;
       }
       unchosen -= xps.length; // next cluster must be smaller to fit
@@ -45,13 +45,15 @@ var createMatches = function (posAry, limit) {
       var cluster = seedAry[position-1];
       return (cluster.length === 1) ? cluster[0] : Base.NONE ;
     });
-    ms.push({ id: { s: 0, r: 2, m: 1 }, p: ps });
+    ms.push({ id: { s: numSections+1, r: 1, m: 1 }, p: ps });
   }
 
   return ms;
 };
 
-// split up the posAry entried cluster found in corresponding r1 match
+// split up the posAry entried cluster found in corresponding within section breakers
+// TODO: extend for subgrouped..
+// TODO: need a way to convert grouped results to match-like results for this
 var updateSeedAry = function (seedAry, match) {
   var res = $.replicate(seedAry.length, []);
   seedAry.forEach(function (xps, x) {
@@ -64,6 +66,9 @@ var updateSeedAry = function (seedAry, match) {
     // always tieCompute match because only strict mode has guaranteed non-ties
     var sorted = $.zip(match.p, match.m).sort(Base.compareZip);
     Base.matchTieCompute(sorted, 0, function (p, pos) {
+      if (res[x+pos-1] == null) {
+        throw new Error("weird index x=" + x + " +pos="+pos+"-1 wth seedArylen"+seedAry.length);
+      }
       res[x+pos-1].push(p);
     });
   });
@@ -87,12 +92,14 @@ function TieBreaker(oldRes, posAry, limit, opts) {
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
   this.nonStrict = opts.nonStrict;
-  this.numGroups = posAry.length; // TODO: rename to numSections
-  this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
+  Base.call(this, oldRes.length, createMatches(posAry, limit));
+
   this.posAry = posAry;
   this.limit = limit;
   this.oldRes = oldRes;
-  Base.call(this, oldRes.length, createMatches(this.posAry, limit));
+  this.numSections = posAry.length;
+  this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
+  this.betweenPosition = Math.ceil(this.limit / this.numSections);
 
   // Demote player positions until we are done
 
@@ -159,12 +166,15 @@ TieBreaker.defaults = function (opts) {
   return opts;
 };
 
-TieBreaker.idString = function (id) {
-  if (id.r === 1) {
-    return "S " + id.m + " TB";
-  }
-  return "R2 TB";
-};
+// because between breakers are at numSections+1, idString need to be bound
+// this breaks tournament assumptions - need to think about this
+// may have to extend ids further :(
+//TieBreaker.idString = function (id) {
+//  var str = (id.s <= this.numSections) ?
+//    "S " + id.s + " TB" :
+//    "Between TB";
+//  return str + " R" + id.r + " M" + id.m;
+//};
 
 // custom from because TieBreaker has different constructor arguments
 TieBreaker.from = function (inst, numPlayers, opts) {
@@ -197,13 +207,12 @@ TieBreaker.prototype._verify =  function (match, score) {
 };
 
 TieBreaker.prototype._progress = function (match) {
-  // within section done ? => need to move the player to between section if it exists
-  var last = this.matches[this.matches.length-1];
-  if (match.id.r === 1 && last.id.r === 2) {
-    var position = Math.ceil(this.limit / this.numGroups);
-    var g = match.id.m - 1;
+  // within section done => move correct player to between section if it exists
+  var betweenMatch = this.findMatch({ s: this.numSections+1, r: 1, m: 1 });
+  if (match.id.s <= this.numSections && betweenMatch) {
+    var g = match.id.s - 1;
     var seedAry = updateSeedAry(this.posAry[g], match);
-    last.p[g] = seedAry[position-1][0];
+    betweenMatch.p[g] = seedAry[this.betweenPosition-1][0];
   }
 };
 
@@ -223,14 +232,14 @@ var finalCompare = function (x, y) {
   return compareResults(x, y);
 };
 
-// we only use tieCompute break up xplacers if there were R2 tiebreakers
+// we only use tieCompute break up xplacers if there were between tiebreakers
 var tieCompute = function (resAry, startPos, cb) {
   Base.resTieCompute(resAry, startPos, cb, $.get('tb'));
 };
 
 var positionAcross = function (xarys) {
   // tieCompute across groups via xplacers to get the `pos` attribute
-  // same as GroupStage procedure except we can split up ties between sections in R2
+  // same as GroupStage procedure except we can split up ties between sections
   var posctr = 0;
   xarys.forEach(function (xplacers) {
     xplacers.sort(compareResults);
@@ -261,7 +270,7 @@ TieBreaker.prototype.results = function () {
   });
 
   // inspect between section tiebreaker
-  var betweenMatch = this.findMatch({ s:0, r: 2, m: 1 });
+  var betweenMatch = this.findMatch({ s: this.numSections+1, r: 1, m: 1 });
   if (betweenMatch && betweenMatch.m) {
     betweenMatch.p.forEach(function (p, i) {
       Base.resultEntry(res, p).tb = betweenMatch.m[i];
@@ -278,7 +287,7 @@ TieBreaker.prototype.results = function () {
 TieBreaker.prototype.rawPositions = function () {
   var findMatch = this.findMatch.bind(this);
   return this.posAry.map(function (seedAry, i) {
-    var m = findMatch({ s:0, r: 1, m: i+1 });
+    var m = findMatch({ s: i+1, r: 1, m: 1 });
     return (m && m.m) ? updateSeedAry(seedAry, m) : seedAry.slice();
   });
 };

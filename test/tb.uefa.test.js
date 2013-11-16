@@ -40,7 +40,7 @@ test("tiebreaker 6 3 uefa", function (t) {
   var tb = TieBreaker.from(uefa, 3);
   t.equal(tb.matches.length, 1, "only one match in tb");
   var m = tb.matches[0];
-  t.equal(m.id.r, 2, "and it's a between groups one");
+  t.equal(m.id.s, 2+1, "and it's a between groups one");
   t.deepEqual(m.p, [3,4], "containing 3 and 4 - the 2nd placers");
 
   // positions must be demoted for results (so emulate the effect with original res)

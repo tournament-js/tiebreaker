@@ -48,10 +48,10 @@ test("8 4 with 2x three-way tie results", function (t) {
   var tb = TieBreaker.from(gs, 5);
   var tms = tb.matches;
   t.equal(tms.length, 3, "3 tbs necessary for this");
-  t.equal(tms[2].id.r, 2, "and last is the between tb");
+  t.equal(tms[2].id.s, 2+1, "and last is the between tb");
   t.equal(tms[2].p.length, 2, "which will contain exactly 2 players");
-  t.equal(tms[0].p.length, 3, "r1m1 will contain exactly 3 players");
-  t.equal(tms[1].p.length, 3, "r1m2 will contain exactly 3 players");
+  t.equal(tms[0].p.length, 3, "s1m1 will contain exactly 3 players");
+  t.equal(tms[1].p.length, 3, "s1m2 will contain exactly 3 players");
 
   // pre start results
   var resInit = tb.results();
@@ -88,9 +88,9 @@ test("8 4 with 2x three-way tie results", function (t) {
   tb.score(tms[1].id, [3,2,1]);
   t.deepEqual(tms[1].p, [4,5,7], 'group 2 tiebreaker players');
 
-  // TODO: should we sort by pos during r1 - at least do after, right?
-  var resR1 = tb.results();
-  t.deepEqual(resR1.map(makeStr), [
+  // TODO: should we sort by pos during within match tiebreaking?
+  var resWithin = tb.results();
+  t.deepEqual(resWithin.map(makeStr), [
       "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
       "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
       "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=7",
@@ -100,41 +100,33 @@ test("8 4 with 2x three-way tie results", function (t) {
       "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
       "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8"
     ],
-    'r1 results - gpos ties resolved'
+    'within results - gpos ties resolved'
   );
-
-  //t.deepEqual($.pluck('pos', resR1), [1,2,3,4, 5,5, 7,8], "r2 cluster still tied!");
-  //t.deepEqual($.pluck('seed', resR1), [3,4,5,1, 7,6, 8,2], "and order correct");
-
 
   t.ok(!tb.isDone(), "not done yet");
   tb.score(tms[2].id, [2,1]); // 6 beats 7
   t.ok(tb.isDone(), "now done!");
 
-  var resR2 = tb.results();
-  //t.deepEqual(resR2.map(makeStr), [
-  //    "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
-  //    "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7",
-  //    "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=7",
-  //    "P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=7",
-  //    "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7",
-  //    "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7",
-  //    "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
-  //    "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8"
-  //  ],
-  //  'r2 results - pos ties resolved'
-  //);
+  var resBetween = tb.results();
+  t.deepEqual(resBetween.map(makeStr), [
+      "P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1",
+      "P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1",
+      "P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3",
+      "P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3",
+      "P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=5",
+      "P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=6",
+      "P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7",
+      "P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7"
+    ],
+    'between results - pos ties resolved at limit point'
+  );
 
-  //t.deepEqual($.pluck('pos', resR2), [1,2,3,4, 5,6, 7,8], "r2 cluster resolved");
-  //t.deepEqual($.pluck('seed', resR2), [3,4,5,1, 6,7, 8,2], "and order correct");
   t.end();
 });
 
-return;
-
-
+return; // this test is a bit borked atm - need to go through
 test("8 4 with 2x three-way tie results - different limits", function (t) {
-  var gs = new GroupStage(8, 4);
+  var gs = new GroupStage(8, { sizes: 4 });
 
   // scored as above - dont modify!
   gs.matches.forEach(function (m) {
@@ -148,12 +140,13 @@ test("8 4 with 2x three-way tie results - different limits", function (t) {
 
   var res = gs.results();
 
+
   var verifyWith2 = function () {
-    var tb = new TieBreaker(res, 2);
+    var tb = TieBreaker.from(gs, 2);
     var tms = tb.matches;
     t.equal(tms.length, 1, "1 tb necessary for this");
-    t.equal(tms[0].p.length, 3, "r1m1 will contain exactly 3 players");
-    t.equal(tms[0].id.r, 1, "match 1 in r1");
+    t.equal(tms[0].id.s <= 2, "match 1 is within");
+    t.equal(tms[0].p.length, 3, "s1m1 will contain exactly 3 players");
     t.deepEqual(tms[0].p, [4,5,7], "and it corr. to the group with 3way 1st");
     // three-way 2nd placer group does not need to be broken with limit 2!
 
