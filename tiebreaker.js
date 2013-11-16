@@ -61,17 +61,19 @@ var createMatches = function (posAry, limit) {
 
 // split up the posAry entried cluster found in corresponding r1 match
 var updateSeedAry = function (seedAry, match) {
-  var res = [];
+  var res = $.replicate(seedAry.length, []);
   seedAry.forEach(function (xps, x) {
-    if (xps.indexOf(match.p[0]) >= 0) {
-      // split match up into match.p.length new sets of xplacers
-      // TODO: nonStrict mode simply forces more logic here
-      return Base.sorted(match).forEach(function (s, i) {
-        res[x+i] = [s];
-      });
+    // NB: while we are not writing 1-1 from seedAry to res, we are always
+    // making sure not to overwrite what we had in previous iterations
+    if (xps.indexOf(match.p[0]) < 0) {
+      res[x] = res[x].concat(xps);
+      return;
     }
-    // copy if not already filled in in earlier iteration
-    res[x] = res[x] || xps.slice();
+    // always tieCompute match because only strict mode has guaranteed non-ties
+    var sorted = $.zip(match.p, match.m).sort(Base.compareZip);
+    Base.matchTieCompute(sorted, 0, function (p, pos) {
+      res[x+pos-1].push(p);
+    });
   });
   return res;
 };
@@ -86,13 +88,15 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, limit);
   }
-  var invReason = TieBreaker.invalid(oldRes, posAry, limit);
+  var invReason = TieBreaker.invalid(oldRes, posAry, opts, limit);
   if (invReason !== null) {
-    console.error("Invalid %d player TieBreaker with oldRes=%j rejected",
-      limit, oldRes
+    console.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
+      limit, oldRes, opts
     );
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
+  opts = TieBreaker.defaults(opts);
+  this.nonStrict = opts.nonStrict;
   this.numGroups = posAry.length; // TODO: rename to numSections
   this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
   this.posAry = posAry;
@@ -102,13 +106,10 @@ function TieBreaker(oldRes, posAry, limit, opts) {
 
   // Demote player positions until we are done
 
-  // NB: because demotion only happens here, and not in results in previous tourney,
-  // it is possible to forward from only one section when tiebreaker is bypassed.
-  // This is problematic, but demoting everywhere, or forcing tiebreaker usage is
-  // equally silly: demotion can only happen on the cluster we want, otherwise we
-  // could never make any inferences of position.
-  // Thus, it is recommended to go through TieBreaker, but left up to the user.
-
+  // Demotion must unfortunately happen here, and not in previous tourneys results.
+  // This is because demotion will change depending on what limits we choose.
+  // While this means if we bypass TB we may end up forwarding unfairly (perhaps
+  // more players from one group than another), TB is here to fix it, so use it.
   var pls = this.players(); // the players that are actually in matches here
   this.numPlayers = pls.length; // override this.numPlayers set via Base.call(this)
   var playersGuaranteed = oldRes.filter(function (r) {
@@ -127,7 +128,7 @@ Base.inherit(TieBreaker);
 //------------------------------------------------------------------
 
 // custom invalid that doesn't call inherited versions (because different ctor args)
-TieBreaker.invalid = function (oldRes, posAry, limit) {
+TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
   if (!Array.isArray(oldRes)) {
     return "results must be implemented";
   }
@@ -154,6 +155,12 @@ TieBreaker.invalid = function (oldRes, posAry, limit) {
     }
   });
   return null;
+};
+
+TieBreaker.defaults = function (opts) {
+  opts = opts || {};
+  opts.nonStrict = Boolean(opts.nonStrict);
+  return opts;
 };
 
 TieBreaker.idString = function (id) {
@@ -187,8 +194,8 @@ TieBreaker.from = function (inst, numPlayers, opts) {
 //------------------------------------------------------------------
 
 TieBreaker.prototype._verify =  function (match, score) {
-  if ($.nub(score).length !== score.length) {
-    return "scores must unambiguously decide every position";
+  if (!this.nonStrict && $.nub(score).length !== score.length) {
+    return "scores must unambiguously decide every position in strict mode";
   }
   return null;
 };
@@ -198,9 +205,9 @@ TieBreaker.prototype._progress = function (match) {
   var last = this.matches[this.matches.length-1];
   if (match.id.r === 1 && last.id.r === 2) {
     var position = Math.ceil(this.limit / this.numGroups);
-    var seedAry = updateSeedAry(this.posAry[match.id.m-1], match);
-    // TODO: splice in seedAry into posAry at index match.id.m-1?
-    last.p[match.id.m-1] = seedAry[position-1][0];
+    var g = match.id.m - 1;
+    var seedAry = updateSeedAry(this.posAry[g], match);
+    last.p[g] = seedAry[position-1][0];
   }
 };
 
