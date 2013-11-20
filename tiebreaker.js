@@ -6,49 +6,30 @@ var $ = require('interlude')
 //------------------------------------------------------------------
 
 /**
- * This creates 2 kind of tiebreakers
- * 1. Within sections (necessary for the latter)
- * 2. Between sections
- *
- * This will cause at most two FFA matches || mini subgroupstages for each player:
- * 1. One for the group/section cluster (to break on gpos) if needed
- * 2. One for the between group/section cluster of xplacers (limit % numSections > 0)
+ * This creates within section tiebreakers
+ * This will cause at most one FFA matches || mini sub-groupstage for each player
  */
-
 var createMatches = function (posAry, limit) {
   var numSections = posAry.length;
   var position = Math.ceil(limit / numSections);
-  var ms = [];
-  var rem = limit % numSections;
+  var breakOneUp = false;
   //console.log('lim pos', position, posAry);
 
-  // within section matches
-  for (var k = 0; k < numSections; k += 1) {
-    var seedAry = posAry[k];
+  return posAry.reduce(function (ms, seedAry, k) {
+
     var unchosen = position;
     // need a match in this section if no clear position-placer
-
     for (var i = 0; unchosen > 0; i += 1) {
       var xps = seedAry[i];
-      var needForBetween = xps.length > 1 && xps.length === unchosen && rem > 0;
+      var needForBetween = xps.length >1 && xps.length === unchosen && breakOneUp;
       if (xps.length > unchosen || needForBetween) {
         ms.push({ id: { s: k+1, r: 1, m: 1 }, p: xps.slice() });
         break;
       }
       unchosen -= xps.length; // next cluster must be smaller to fit
     }
-  }
-
-  // between section match
-  if (rem > 0) {
-    var ps = posAry.map(function (seedAry) {
-      var cluster = seedAry[position-1];
-      return (cluster.length === 1) ? cluster[0] : Base.NONE ;
-    });
-    ms.push({ id: { s: numSections+1, r: 1, m: 1 }, p: ps });
-  }
-
-  return ms;
+    return ms;
+  }, []);
 };
 
 // split up the posAry entried cluster found in corresponding within section breakers
@@ -98,7 +79,7 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   this.limit = limit;
   this.oldRes = oldRes;
   this.numSections = posAry.length;
-  this.groupSize = $.flatten(posAry[0]).length; // TODO: rename size
+  this.sectionSize = $.flatten(posAry[0]).length;
   this.betweenPosition = Math.ceil(this.limit / this.numSections);
 
   // Demote player positions until we are done
@@ -135,6 +116,9 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
   if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
     return "limit must be an integer in the range {1, ... ,results.length-1}";
   }
+  if (limit % posAry.length !== 0) {
+    return "number of sections must divide limit";
+  }
   oldRes.forEach(function (r) {
     if (![r.seed, r['for'], r.pos].every(Base.isInteger)) {
       return "invalid results format - common properties missing";
@@ -166,15 +150,11 @@ TieBreaker.defaults = function (opts) {
   return opts;
 };
 
-// because between breakers are at numSections+1, idString need to be bound
-// this breaks tournament assumptions - need to think about this
-// may have to extend ids further :(
-//TieBreaker.idString = function (id) {
-//  var str = (id.s <= this.numSections) ?
-//    "S " + id.s + " TB" :
-//    "Between TB";
-//  return str + " R" + id.r + " M" + id.m;
-//};
+TieBreaker.idString = function (id) {
+  // TODO: perhaps minify id string to what is minimally required
+  // i.e. if only 1 match per section, then only say "S%d TB"
+  return "S" + id.s + " TB (R" + id.r + " M" + id.m + ")";
+};
 
 // custom from because TieBreaker has different constructor arguments
 TieBreaker.from = function (inst, numPlayers, opts) {
@@ -206,20 +186,7 @@ TieBreaker.prototype._verify =  function (match, score) {
   return null;
 };
 
-TieBreaker.prototype._progress = function (match) {
-  // within section done => move correct player to between section if it exists
-  var betweenMatch = this.findMatch({ s: this.numSections+1, r: 1, m: 1 });
-  if (match.id.s <= this.numSections && betweenMatch) {
-    var g = match.id.s - 1;
-    var seedAry = updateSeedAry(this.posAry[g], match);
-    betweenMatch.p[g] = seedAry[this.betweenPosition-1][0];
-  }
-};
-
 var compareResults = function (x, y) {
-  if (x.tb != null && y.tb != null) {
-    return y.tb - x.tb;
-  }
   var xScore = x.for - (x.against || 0);
   var yScore = y.for - (y.against || 0);
   return (y.pts - x.pts) || (yScore - xScore) || (x.seed - y.seed);
@@ -232,19 +199,13 @@ var finalCompare = function (x, y) {
   return compareResults(x, y);
 };
 
-// we only use tieCompute break up xplacers if there were between tiebreakers
-var tieCompute = function (resAry, startPos, cb) {
-  Base.resTieCompute(resAry, startPos, cb, $.get('tb'));
-};
-
 var positionAcross = function (xarys) {
-  // tieCompute across groups via xplacers to get the `pos` attribute
-  // same as GroupStage procedure except we can split up ties between sections
-  var posctr = 0;
+  // always tie between groups like in groupstage - we dont make inferences
+  var posctr = 1;
   xarys.forEach(function (xplacers) {
     xplacers.sort(compareResults);
-    tieCompute(xplacers, posctr, function (r, pos) {
-      r.pos = pos;
+    xplacers.forEach(function (r) {
+      r.pos = posctr;
     });
     posctr += xplacers.length;
   });
@@ -258,7 +219,7 @@ TieBreaker.prototype.results = function () {
   // NB: we do not care about stats from the matches apart from what it broke
 
   // gposition based on updated posAry from rawPositions - and create xarys
-  var xarys = $.replicate(this.groupSize, []);
+  var xarys = $.replicate(this.sectionSize, []);
   this.rawPositions().forEach(function (seedAry) {
     seedAry.forEach(function (gxp, x) {
       gxp.forEach(function (s) {
@@ -268,14 +229,6 @@ TieBreaker.prototype.results = function () {
       });
     });
   });
-
-  // inspect between section tiebreaker
-  var betweenMatch = this.findMatch({ s: this.numSections+1, r: 1, m: 1 });
-  if (betweenMatch && betweenMatch.m) {
-    betweenMatch.p.forEach(function (p, i) {
-      Base.resultEntry(res, p).tb = betweenMatch.m[i];
-    });
-  }
 
   if (this.isDone()) {
     positionAcross(xarys);
