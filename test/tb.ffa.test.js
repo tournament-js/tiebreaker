@@ -29,27 +29,22 @@ test("ffa 8 [4] limit 4", function (t) {
     ], 'ffa posAry before tiebreaking'
   );
 
-  var tb = TieBreaker.from(ffa, 1);
+  var tb = TieBreaker.from(ffa, 2);
   var tbms = tb.matches;
-  t.equal(tbms.length, 2, "matches in tb");
+  t.equal(tbms.length, 1, "matches in tb");
   t.equal(tbms[0].id.s, 1, "first is s1 ffa match");
   t.deepEqual(tbms[0].p, [1, 3], "containing tied in match 1");
-  t.equal(tbms[1].id.s, 3, 'second match is the between breaker');
-  t.deepEqual(tbms[1].p, [0, 2], 'which waits for winner of tbms[0]');
   tb.score(tbms[0].id, [2,1]);
-  t.deepEqual(tbms[1].p, [1, 2], 'no longer waiting');
-  tb.score(tbms[1].id, [2,1]);
   t.ok(tb.isDone(), 'tb done');
 
   var tbRes = tb.results();
-  // TODO: this is WRONG - need to reposition
+
   t.deepEqual(tbRes.map(makeStr), [
       // the between fighters
       "1 P1 W=1 F=4 A=0 GPOS=1",
-      "2 P2 W=1 F=3 A=0 GPOS=1",
-      // the newly determined second placer (3 no longer tied for 1)
+      "1 P2 W=1 F=3 A=0 GPOS=1",
+      // the new 2nd placers
       "3 P3 W=1 F=4 A=0 GPOS=2",
-      // the original 2nd placers
       "3 P4 W=0 F=2 A=1 GPOS=2",
       "3 P5 W=0 F=2 A=1 GPOS=2",
       // original 3rd placer
@@ -107,6 +102,7 @@ test("ffa unbalanced continuation", function (t) {
   );
 
   var top4 = $.pluck('seed', tbRes.slice(0, 4));
+  var top4pos = $.pluck('pos', tbRes);
   t.deepEqual(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
 
   t.end();

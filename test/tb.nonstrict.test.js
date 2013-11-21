@@ -83,21 +83,5 @@ test("ffa unbalanced continuation", function (t) {
     ], 'posAry after tb4 - fully broken cluster 1'
   );
 
-
-  // then change requirements - though only sensible in this case (.tb persists)
-  // this simply checks that the tiebreake construction and positioning alg is sound
-  var tb5 = TieBreaker.from(tb4, 7, { nonStrict: true });
-  var tb5m = tb5.matches;
-  t.equal(tb5m.length, 1, 'only 1 match in tb5m');
-  t.deepEqual(tb5m[0].p, [8,7], 'only a between tiebreaker now');
-  t.ok(tb5.score(tb5m[0].id, [2,1]), 'can untangle these');
-  t.ok(tb5.isDone(), 'tb5 done now');
-
-  t.deepEqual(tb5.rawPositions(), [
-      [ [1, 3], [], [6], [8] ],
-      [ [2], [4], [5], [7] ]
-    ], 'posAry after tb5 - unchanged only broke across'
-  );
-
   t.end();
 });
