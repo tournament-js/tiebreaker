@@ -47,9 +47,6 @@ var updateSeedAry = function (seedAry, match) {
     // always tieCompute match because only strict mode has guaranteed non-ties
     var sorted = $.zip(match.p, match.m).sort(Base.compareZip);
     Base.matchTieCompute(sorted, 0, function (p, pos) {
-      if (res[x+pos-1] == null) {
-        throw new Error("weird index x=" + x + " +pos="+pos+"-1 wth seedArylen"+seedAry.length);
-      }
       res[x+pos-1].push(p);
     });
   });
@@ -114,7 +111,7 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
     return "rawPositions must be implemented properly";
   }
   if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
-    return "limit must be an integer in the range {1, ... ,results.length-1}";
+    return "limit must be an integer in {1, ..., previous.numPlayers}";
   }
   if (limit % posAry.length !== 0) {
     return "number of sections must divide limit";
@@ -143,7 +140,7 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 };
 
 TieBreaker.defaults = function (opts) {
-  opts = opts || {};
+  opts = opts || {}; // bypass Base.defaults
   opts.subgrouped = Boolean(opts.subgrouped);
   // NB: subgrouped tiebreakers MUST be nonStrict
   opts.nonStrict = Boolean(opts.nonStrict) || opts.subgrouped;
