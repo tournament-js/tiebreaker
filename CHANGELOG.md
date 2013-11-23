@@ -1,3 +1,14 @@
+0.2.0 / 2013-11-XX
+==================
+  * REMOVED BETWEEN SECTION TIEBREAKERS:
+    - Impossible to do in the same stage as within stage subgrouped tiebreakers
+    - But can implement this specific feature in a separate module
+  * Added `subGrouped` tiebreaker mode!
+  * New `id` convention:
+    - `s` - the section corresponding to the section we are breaking
+    - `r` - the round in this within section breaker
+    - `m` - the match in this within section breaker round
+
 0.1.1 / 2013-11-16
 ==================
   * Add `nonStrict` mode support where `TieBreaker` matches can tie, or be partially resolved (which may mean you have to tiebreak more than once)
