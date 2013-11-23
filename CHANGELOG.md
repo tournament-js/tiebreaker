@@ -1,4 +1,4 @@
-0.2.0 / 2013-11-XX
+0.2.0 / 2013-11-23
 ==================
   * REMOVED BETWEEN SECTION TIEBREAKERS:
     - Impossible to do in the same stage as within stage subgrouped tiebreakers

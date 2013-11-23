@@ -129,6 +129,8 @@ function TieBreaker(oldRes, posAry, limit, opts) {
     for (var i = 0; i < xs.length; i += 1) {
       for (var j = 0; j < xs[i].matches.length; j += 1) {
         var m = xs[i].matches[j];
+        // NB: modifying the matches here so that outside world sees the section
+        // corr. to the section they came from - whereas gs inst needs s === 1
         ms.push({
           id: { s: xs[i].tbSection, r: m.id.r, m: m.id.m },
           p: m.p.slice()

@@ -2,6 +2,10 @@ var test = require('tap').test;
 var TieBreaker = require('../');
 var FFA = require('ffa');
 
+var makeStr = function (r) {
+  return "P" + r.seed + " gpos=" + r.gpos + " pos=" + r.pos;
+};
+
 test("grouped tiebreaker resolution", function (t) {
   // start off with ffa because simpler to construct complicated ties
   var ffa = new FFA(8, { sizes: [4] });
@@ -14,6 +18,18 @@ test("grouped tiebreaker resolution", function (t) {
       [[1,3,6],[],[],[8]],
       [[2],[4,5,7],[],[]]
     ], 'ffa raw positions'
+  );
+  t.deepEqual(ffa.results().map(makeStr), [
+      "P1 gpos=1 pos=1",
+      "P2 gpos=1 pos=1",
+      "P3 gpos=1 pos=1",
+      "P6 gpos=1 pos=1",
+      "P4 gpos=2 pos=5",
+      "P5 gpos=2 pos=5",
+      "P7 gpos=2 pos=5",
+      "P8 gpos=4 pos=8"
+    ],
+    'tb results'
   );
 
   // need to break both clusters
@@ -41,6 +57,18 @@ test("grouped tiebreaker resolution", function (t) {
       [[2],[4],[5],[7]]
     ], 'tb raw positions'
   );
+  t.deepEqual(tb.results().map(makeStr), [
+      "P1 gpos=1 pos=1",
+      "P2 gpos=1 pos=1",
+      "P3 gpos=1 pos=1",
+      "P6 gpos=1 pos=1",
+      "P4 gpos=2 pos=5",
+      "P5 gpos=3 pos=6",
+      "P7 gpos=4 pos=7",
+      "P8 gpos=4 pos=7"
+    ],
+    'tb results'
+  );
 
   // forward first tiebreaker results to another tiebreaker
   var tb2 = TieBreaker.from(tb, 4, { grouped: true });
@@ -59,6 +87,21 @@ test("grouped tiebreaker resolution", function (t) {
       [[2],[4],[5],[7]]
     ], 'tb2 raw positions'
   );
+  t.deepEqual(tb2.results().map(makeStr), [
+      "P1 gpos=1 pos=1",
+      "P2 gpos=1 pos=1",
+      "P3 gpos=1 pos=1",
+      "P4 gpos=2 pos=4",
+      "P6 gpos=3 pos=5",
+      "P5 gpos=3 pos=5",
+      "P7 gpos=4 pos=7",
+      "P8 gpos=4 pos=7"
+    ],
+    'tb results'
+  );
+
+  var tb3 = TieBreaker.from(tb2, 4, { grouped: true });
+  t.deepEqual(tb3.matches, [], 'not necessary to break again');
 
   t.end();
 });
