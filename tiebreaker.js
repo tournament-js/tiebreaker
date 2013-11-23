@@ -1,40 +1,91 @@
 var $ = require('interlude')
+  , GroupStage = require('groupstage')
   , Base = require('tournament');
 
 //------------------------------------------------------------------
 // Match helpers
 //------------------------------------------------------------------
 
-/**
- * This creates within section tiebreakers
- * This will cause at most one FFA matches || mini sub-groupstage for each player
- */
-var createMatches = function (posAry, limit) {
+var createClusters = function (posAry, limit) {
   var numSections = posAry.length;
   var position = Math.ceil(limit / numSections);
   var breakOneUp = false;
   //console.log('lim pos', position, posAry);
 
-  return posAry.reduce(function (ms, seedAry, k) {
-
+  return posAry.map(function (seedAry) {
     var unchosen = position;
     // need a match in this section if no clear position-placer
     for (var i = 0; unchosen > 0; i += 1) {
       var xps = seedAry[i];
       var needForBetween = xps.length >1 && xps.length === unchosen && breakOneUp;
       if (xps.length > unchosen || needForBetween) {
-        ms.push({ id: { s: k+1, r: 1, m: 1 }, p: xps.slice() });
-        break;
+        return xps.slice();
       }
       unchosen -= xps.length; // next cluster must be smaller to fit
     }
-    return ms;
-  }, []);
+    return []; // nothing to break this section
+  });
+};
+
+var createGroupStageBreaker = function (cluster, section, gsOpts) {
+  var gs = new GroupStage(cluster.length, gsOpts);
+  gs.tbSection = section;
+  gs.matches.forEach(function (m) {
+    // NB: cannot modify section as GroupStage relies on it being < numGroups
+    m.p.forEach(function (oldSeed, i) {
+      // but can safely modify seeds in match - equivalent to using .from
+      m.p[i] = cluster[oldSeed-1];
+    });
+  });
+  return gs;
+};
+var createFfaBreaker = function (cluster, section) {
+  return { id: { s: section, r: 1, m: 1}, p: cluster };
+};
+
+var createMatches = function (posAry, limit, opts) {
+  var xs = [];
+  createClusters(posAry, limit).forEach(function (ps, i) {
+    if (ps.length) {
+      var matchMaker = opts.grouped ? createGroupStageBreaker : createFfaBreaker;
+      xs.push(matchMaker(ps, i+1, opts));
+    }
+  });
+  return xs;
+};
+
+//------------------------------------------------------------------
+// results / rawPositions helpers
+//------------------------------------------------------------------
+
+// NB: expects instance context
+var getWithinBreakerScore = function (section) {
+  if (!this.grouped) {
+    var ffaM = this.findMatch({ s: section, r: 1, m: 1 });
+    return (ffaM && ffaM.m) ? ffaM : null;
+  }
+
+  var gs = $.firstBy(function (gs) {
+    return gs.tbSection === section;
+  }, this.groupStages);
+
+  if (gs == undefined || !gs.isDone()) {
+    return null;
+  }
+  var gsRes = gs.results();
+  var positions = gs.rawPositions(gsRes);
+  var match = { p: [], m: [] }; // match equivalent
+  // convert from rawPosition - only used by matchTieCompute in updater
+  positions[0].forEach(function (xps, x) {
+    xps.forEach(function (p) {
+      match.p.push(p);
+      match.m.push(positions[0].length-x);
+    });
+  });
+  return match;
 };
 
 // split up the posAry entried cluster found in corresponding within section breakers
-// TODO: extend for subgrouped..
-// TODO: need a way to convert grouped results to match-like results for this
 var updateSeedAry = function (seedAry, match) {
   var res = $.replicate(seedAry.length, []);
   seedAry.forEach(function (xps, x) {
@@ -70,7 +121,27 @@ function TieBreaker(oldRes, posAry, limit, opts) {
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
   this.nonStrict = opts.nonStrict;
-  Base.call(this, oldRes.length, createMatches(posAry, limit));
+
+  this.grouped = opts.grouped;
+  var xs = createMatches(posAry, limit, opts);
+  var ms = [];
+  if (opts.grouped) {
+    for (var i = 0; i < xs.length; i += 1) {
+      for (var j = 0; j < xs[i].matches.length; j += 1) {
+        var m = xs[i].matches[j];
+        ms.push({
+          id: { s: xs[i].tbSection, r: m.id.r, m: m.id.m },
+          p: m.p.slice()
+        });
+      }
+    }
+    this.groupStages = xs;
+  }
+  else {
+    ms = xs;
+  }
+
+  Base.call(this, oldRes.length, ms);
 
   this.posAry = posAry;
   this.limit = limit;
@@ -141,9 +212,11 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 
 TieBreaker.defaults = function (opts) {
   opts = opts || {}; // bypass Base.defaults
-  opts.subgrouped = Boolean(opts.subgrouped);
-  // NB: subgrouped tiebreakers MUST be nonStrict
-  opts.nonStrict = Boolean(opts.nonStrict) || opts.subgrouped;
+  opts.grouped = Boolean(opts.grouped);
+  opts.groupOpts = opts.grouped ? GroupStage.defaults(opts.groupOpts): {};
+  delete opts.groupOpts.groupSize; // all subgroups must be ONE group only
+  // grouped tiebreakers cannot be strict
+  opts.nonStrict = Boolean(opts.nonStrict) || opts.grouped;
   return opts;
 };
 
@@ -181,6 +254,16 @@ TieBreaker.prototype._verify =  function (match, score) {
     return "scores must unambiguously decide every position in strict mode";
   }
   return null;
+};
+
+TieBreaker.prototype._progress = function (match) {
+  if (this.grouped) {
+    var gs = $.firstBy(function (gs) {
+      return gs.tbSection === match.id.s;
+    }, this.groupStages);
+    var oldId = { s: 1, r: match.id.r, m: match.id.m };
+    gs.score(oldId, match.m);
+  }
 };
 
 var compareResults = function (x, y) {
@@ -235,10 +318,11 @@ TieBreaker.prototype.results = function () {
 };
 
 TieBreaker.prototype.rawPositions = function () {
-  var findMatch = this.findMatch.bind(this);
+
+  var findScores = getWithinBreakerScore.bind(this);
   return this.posAry.map(function (seedAry, i) {
-    var m = findMatch({ s: i+1, r: 1, m: 1 });
-    return (m && m.m) ? updateSeedAry(seedAry, m) : seedAry.slice();
+    var match = findScores(i+1);
+    return match == null ? seedAry : updateSeedAry(seedAry, match);
   });
 };
 
