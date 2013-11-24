@@ -1,9 +1,16 @@
+0.2.1 / 2013-11-24
+==================
+  * Fixed a bug in `grouped` tiebreakers that 2 player subgroups to fail
+  * bumped groupstage module to get this newly allowed 2 player functionality
+  * bump tournament to fix a bug that made grouped mode to fail when having differntly sized sub groups
+  * add static `isNecessary` function again
+
 0.2.0 / 2013-11-23
 ==================
   * REMOVED BETWEEN SECTION TIEBREAKERS:
     - Impossible to do in the same stage as within stage subgrouped tiebreakers
     - But can implement this specific feature in a separate module
-  * Added `subGrouped` tiebreaker mode!
+  * Added `grouped` tiebreaker mode!
   * New `id` convention:
     - `s` - the section corresponding to the section we are breaking
     - `r` - the round in this within section breaker
