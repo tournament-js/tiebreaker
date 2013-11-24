@@ -3,7 +3,7 @@ var $ = require('interlude')
   , Base = require('tournament');
 
 //------------------------------------------------------------------
-// Match helpers
+// Init helpers
 //------------------------------------------------------------------
 
 var createClusters = function (posAry, limit) {
@@ -48,7 +48,7 @@ var createMatches = function (posAry, limit, opts) {
   createClusters(posAry, limit).forEach(function (ps, i) {
     if (ps.length) {
       var matchMaker = opts.grouped ? createGroupStageBreaker : createFfaBreaker;
-      xs.push(matchMaker(ps, i+1, opts));
+      xs.push(matchMaker(ps, i+1, opts.groupOpts));
     }
   });
   return xs;
@@ -215,7 +215,7 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 TieBreaker.defaults = function (opts) {
   opts = opts || {}; // bypass Base.defaults
   opts.grouped = Boolean(opts.grouped);
-  opts.groupOpts = opts.grouped ? GroupStage.defaults(opts.groupOpts): {};
+  opts.groupOpts = opts.grouped ? GroupStage.defaults(999, opts.groupOpts): {};
   delete opts.groupOpts.groupSize; // all subgroups must be ONE group only
   // grouped tiebreakers cannot be strict
   opts.nonStrict = Boolean(opts.nonStrict) || opts.grouped;
@@ -319,8 +319,7 @@ TieBreaker.prototype.results = function () {
   return res.sort(finalCompare);
 };
 
-TieBreaker.prototype.rawPositions = function () {
-
+TieBreaker.prototype.rawPositions = function (/*res*/) {
   var findScores = getWithinBreakerScore.bind(this);
   return this.posAry.map(function (seedAry, i) {
     var match = findScores(i+1);
