@@ -69,7 +69,7 @@ var getWithinBreakerScore = function (section) {
     return gs.tbSection === section;
   }, this.groupStages);
 
-  if (gs == undefined || !gs.isDone()) {
+  if (gs == null || !gs.isDone()) {
     return null;
   }
   var gsRes = gs.results();
@@ -245,6 +245,14 @@ TieBreaker.from = function (inst, numPlayers, opts) {
 
   // NB: no replacing for TieBreaker, everything read from results
   return new TieBreaker(res, posAry, numPlayers, opts);
+};
+
+TieBreaker.isNecessary = function (inst, numPlayers) {
+  var posAry = inst.rawPositions(inst.results());
+  var hasNonEmptyCluster = function (cluster) {
+    return cluster.length > 0;
+  };
+  return createClusters(posAry, numPlayers).some(hasNonEmptyCluster);
 };
 
 //------------------------------------------------------------------
