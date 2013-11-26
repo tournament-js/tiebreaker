@@ -6,10 +6,9 @@ var $ = require('interlude')
 // Init helpers
 //------------------------------------------------------------------
 
-var createClusters = function (posAry, limit) {
+var createClusters = function (posAry, limit, breakOneUp) {
   var numSections = posAry.length;
   var position = Math.ceil(limit / numSections);
-  var breakOneUp = false;
   //console.log('lim pos', position, posAry);
 
   return posAry.map(function (seedAry) {
@@ -45,7 +44,7 @@ var createFfaBreaker = function (cluster, section) {
 
 var createMatches = function (posAry, limit, opts) {
   var xs = [];
-  createClusters(posAry, limit).forEach(function (ps, i) {
+  createClusters(posAry, limit, opts.breakForBetween).forEach(function (ps, i) {
     if (ps.length) {
       var matchMaker = opts.grouped ? createGroupStageBreaker : createFfaBreaker;
       xs.push(matchMaker(ps, i+1, opts.groupOpts));
@@ -120,9 +119,7 @@ function TieBreaker(oldRes, posAry, limit, opts) {
     );
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
-  this.nonStrict = opts.nonStrict;
 
-  this.grouped = opts.grouped;
   var xs = createMatches(posAry, limit, opts);
   var ms = [];
   if (opts.grouped) {
@@ -145,6 +142,8 @@ function TieBreaker(oldRes, posAry, limit, opts) {
 
   Base.call(this, oldRes.length, ms);
 
+  this.grouped = opts.grouped;
+  this.strict = opts.strict;
   this.posAry = posAry;
   this.limit = limit;
   this.oldRes = oldRes;
@@ -214,11 +213,12 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 
 TieBreaker.defaults = function (opts) {
   opts = opts || {}; // bypass Base.defaults
+  opts.breakForBetween = Boolean(opts.breakForBetween);
   opts.grouped = Boolean(opts.grouped);
   opts.groupOpts = opts.grouped ? GroupStage.defaults(999, opts.groupOpts): {};
   delete opts.groupOpts.groupSize; // all subgroups must be ONE group only
   // grouped tiebreakers cannot be strict
-  opts.nonStrict = Boolean(opts.nonStrict) || opts.grouped;
+  opts.strict = Boolean(opts.strict) && !opts.grouped;
   return opts;
 };
 
@@ -247,12 +247,14 @@ TieBreaker.from = function (inst, numPlayers, opts) {
   return new TieBreaker(res, posAry, numPlayers, opts);
 };
 
-TieBreaker.isNecessary = function (inst, numPlayers) {
+TieBreaker.isNecessary = function (inst, numPlayers, opts) {
+  opts = TieBreaker.defaults(opts);
   var posAry = inst.rawPositions(inst.results());
   var hasNonEmptyCluster = function (cluster) {
     return cluster.length > 0;
   };
-  return createClusters(posAry, numPlayers).some(hasNonEmptyCluster);
+  var clusters = createClusters(posAry, numPlayers, opts.breakForBetween)
+  return clusters.some(hasNonEmptyCluster);
 };
 
 //------------------------------------------------------------------
@@ -260,7 +262,7 @@ TieBreaker.isNecessary = function (inst, numPlayers) {
 //------------------------------------------------------------------
 
 TieBreaker.prototype._verify =  function (match, score) {
-  if (!this.nonStrict && $.nub(score).length !== score.length) {
+  if (this.strict && $.nub(score).length !== score.length) {
     return "scores must unambiguously decide every position in strict mode";
   }
   return null;
