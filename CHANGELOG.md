@@ -1,3 +1,8 @@
+0.3.0 / 2013-11-26
+==================
+  * Changed `nonStrict` to `strict`, so default is now `strict: false`
+  * Added `breakForBetween` flag to allow breaking one level up - fixes #1
+
 0.2.1 / 2013-11-24
 ==================
   * Fixed a bug in `grouped` tiebreakers that 2 player subgroups to fail
