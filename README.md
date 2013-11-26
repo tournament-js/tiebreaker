@@ -4,7 +4,7 @@
 [![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
 
 ## Overview
-TieBreaker deals with between within _groups_ ties in tournaments that has group-like equivalents. Such tournaments include:
+TieBreaker deals within _groups_ ties in tournaments that has group-like equivalents. Such tournaments include:
 
 - [GroupStage](https://npmjs.org/package/groupstage)
 - [FFA](https://npmjs.org/package/ffa) (when using a multiple match final round)
