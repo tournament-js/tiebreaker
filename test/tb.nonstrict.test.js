@@ -23,7 +23,7 @@ test("ffa unbalanced continuation", function (t) {
 
   // want to gradually (over the course of several tiebreakers) break up posAry
   // first a noop TB (all just tie again)
-  var tb = TieBreaker.from(ffa, 4, { nonStrict: true });
+  var tb = TieBreaker.from(ffa, 4);
   var tbm = tb.matches;
   t.equal(tbm.length, 2, 'two matches in tbm');
   t.deepEqual(tbm[0].p, [1,3,6], 's1 tiebreaker 1');
@@ -39,7 +39,7 @@ test("ffa unbalanced continuation", function (t) {
   );
 
   // then partialy break r1m2
-  var tb2 = TieBreaker.from(tb, 4, { nonStrict: true });
+  var tb2 = TieBreaker.from(tb, 4);
   var tb2m = tb2.matches;
   t.equal(tb2m.length, 2, 'two matches in tb2m');
   t.deepEqual(tb2m[0].p, [1,3,6], 'r1 tiebreaker 1');
@@ -55,7 +55,7 @@ test("ffa unbalanced continuation", function (t) {
   );
 
   // then break remaining r1m2
-  var tb3 = TieBreaker.from(tb2, 4, { nonStrict: true });
+  var tb3 = TieBreaker.from(tb2, 4);
   var tb3m = tb3.matches;
   t.equal(tb3m.length, 2, 'two matches in tb3m');
   t.deepEqual(tb3m[0].p, [1,3,6], 's1 tiebreaker 1');
@@ -70,7 +70,7 @@ test("ffa unbalanced continuation", function (t) {
     ], 'posAry after tb3 - fully broken cluster 1'
   );
 
-  var tb4 = TieBreaker.from(tb3, 4, { nonStrict: true });
+  var tb4 = TieBreaker.from(tb3, 4);
   var tb4m = tb4.matches;
   t.equal(tb4m.length, 1, 'only 1 match in tb4m');
   t.deepEqual(tb4m[0].p, [1,3,6], 's1 tiebreaker 1');

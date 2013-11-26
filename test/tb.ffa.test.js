@@ -29,7 +29,7 @@ test("ffa 8 [4] limit 4", function (t) {
     ], 'ffa posAry before tiebreaking'
   );
 
-  var tb = TieBreaker.from(ffa, 2);
+  var tb = TieBreaker.from(ffa, 2, { strict: true });
   var tbms = tb.matches;
   t.equal(tbms.length, 1, "matches in tb");
   t.equal(tbms[0].id.s, 1, "first is s1 ffa match");
@@ -86,7 +86,7 @@ test("ffa unbalanced continuation", function (t) {
   // dont really know top 4 from these results
   // HOWEVER - if we did .from(ffa, 4) on other tournament
   // we would unfortunately just pick [1,5,2,6] (WHICH IS UNFAIR)
-  var tb = TieBreaker.from(ffa, 4);
+  var tb = TieBreaker.from(ffa, 4, { strict: true });
   var tbm = tb.matches;
   t.deepEqual(tbm[0].p, [1,2,6], 'r1 tiebreaker 1');
   t.deepEqual(tbm[1].p, [3,4,7], 'r1 tiebreaker 2');

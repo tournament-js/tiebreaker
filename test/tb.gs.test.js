@@ -17,7 +17,7 @@ test("gs 9 3 all equal scores - proceed 3", function (t) {
   t.deepEqual($.nub($.pluck('wins', res)), [1], "all players won 1 match");
 
 
-  var tb = TieBreaker.from(gs, 3);
+  var tb = TieBreaker.from(gs, 3, { strict: true });
   var tms = tb.matches;
 
   t.equal(tms.length, 3, "should only need within TBs");
