@@ -136,7 +136,7 @@ Results out from a `TieBreaker` instance are identical to the results received f
 - The `pos` attributes are at the end built up like `GroupStage`
 
 ### Extras
-TieBreaker (though it implements `results` and `from` slightly differently than any other tournament) is still a valid [tournament](https://npmjs.org/package/tournament). All the methods available on the base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/master/blob/doc/base.md)
+While TieBreaker implements `results` and `from` slightly differently than any other tournament, is still a perfectly valid [tournament](https://npmjs.org/package/tournament). All the methods available on the tournament base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/master/blob/doc/base.md)
 
 ## License
 MIT-Licensed. See LICENSE file for details.
