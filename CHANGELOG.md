@@ -1,3 +1,8 @@
+0.4.0 / 2013-12-23
+==================
+  * Updated `tournament` to 0.21.0 so that `TieBreaker` is an `EventEmitter`
+  * Added `.name` property on instance for tourney implementations
+
 0.3.0 / 2013-11-26
 ==================
   * Changed `nonStrict` to `strict`, so default is now `strict: false`
