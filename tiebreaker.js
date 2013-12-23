@@ -141,7 +141,7 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   }
 
   Base.call(this, oldRes.length, ms);
-
+  this.name = 'TieBreaker';
   this.grouped = opts.grouped;
   this.strict = opts.strict;
   this.posAry = posAry;
