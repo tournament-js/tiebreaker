@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "interlude": "~1.0.2",
-    "tournament": "~0.20.4",
+    "tournament": "~0.21.0",
     "groupstage": "~0.6.2"
   },
   "devDependencies": {
