@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "tap": "~0.4.4",
-    "ffa": "~0.5.0"
+    "ffa": "~0.6.0"
   },
   "bugs": {
     "url": "http://github.com/clux/tiebreaker/issues"
