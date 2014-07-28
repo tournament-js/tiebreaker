@@ -1,7 +1,9 @@
 # TieBreaker
-[![Build Status](https://secure.travis-ci.org/clux/tiebreaker.png)](http://travis-ci.org/clux/tiebreaker)
-[![Dependency Status](https://david-dm.org/clux/tiebreaker.png)](https://david-dm.org/clux/tiebreaker)
-[![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
+[![npm status](http://img.shields.io/npm/v/tiebreaker.svg)](https://www.npmjs.org/package/tiebreaker)
+[![build status](https://secure.travis-ci.org/clux/tiebreaker.svg)](http://travis-ci.org/clux/tiebreaker)
+[![dependency status](https://david-dm.org/clux/tiebreaker.svg)](https://david-dm.org/clux/tiebreaker)
+[![coverage status](http://img.shields.io/coveralls/clux/tiebreaker.svg)](https://coveralls.io/r/clux/tiebreaker)
+[![unstable](http://img.shields.io/badge/stability-unstable-E5AE13.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
 
 ## Overview
 TieBreaker deals within _groups_ ties in tournaments that has group-like equivalents. Such tournaments include:
