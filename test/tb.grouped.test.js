@@ -1,6 +1,6 @@
 var GroupStage = require('groupstage')
   , FFA = require('ffa')
-  , TieBreaker = require('../')
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../')
   , $ = require('interlude');
 
 var makeStr = function (r) {
@@ -129,34 +129,38 @@ exports.readme = function (t) {
   t.ok(TieBreaker.isNecessary(gs, 4), "need to break this up");
 
   // ffa breakers:
-  var tb = TieBreaker.from(gs, 4); // want the top 4
-  t.deepEqual(tb.matches, [
-      { id: { s: 1, r: 1, m: 1 }, p: [ 3, 8 ] },
-      { id: { s: 2, r: 1, m: 1 }, p: [ 4, 5, 7 ] }
-    ], 'ffa breakers'
-  );
-  tb.score(tb.matches[0].id, [2,1]);
-  tb.score(tb.matches[1].id, [3,2,1]);
-  var top4 = tb.results().slice(0, 4);
-  t.deepEqual(top4.map($.get('seed')), [4,1,5,3]); // order because score diff
-  t.deepEqual(top4.map($.get('pos')), [1,1,3,3]); // which does not break between
+  (function () {
+    var tb = TieBreaker.from(gs, 4); // want the top 4
+    t.deepEqual(tb.matches, [
+        { id: { s: 1, r: 1, m: 1 }, p: [ 3, 8 ] },
+        { id: { s: 2, r: 1, m: 1 }, p: [ 4, 5, 7 ] }
+      ], 'ffa breakers'
+    );
+    tb.score(tb.matches[0].id, [2,1]);
+    tb.score(tb.matches[1].id, [3,2,1]);
+    var top4 = tb.results().slice(0, 4);
+    t.deepEqual(top4.map($.get('seed')), [4,1,5,3]); // order because score diff
+    t.deepEqual(top4.map($.get('pos')), [1,1,3,3]); // which does not break between
+  }());
 
   // grouped breakers:
-  var tb = TieBreaker.from(gs, 4, { grouped: true });
-  t.equal(tb.matches.length, 3*1+1, "one 3 person groupstage and a 2player gs");
-  t.deepEqual(tb.matches, [
-      { id: { s: 1, r: 1, m: 1 }, p: [ 3, 8 ] },
-      { id: { s: 2, r: 1, m: 1 }, p: [ 5, 7 ] },
-      { id: { s: 2, r: 2, m: 1 }, p: [ 4, 7 ] },
-      { id: { s: 2, r: 3, m: 1 }, p: [ 4, 5 ] }
-    ], "grouped breakers"
-  );
-  tb.matches.forEach(function (m) {
-    tb.score(m.id, m.p[0] < m.p[1] ? [1,0] : [0,1]);
-  });
-  var top4 = tb.results().slice(0, 4);
-  t.deepEqual(top4.map($.get('seed')), [4,1,5,3]); // order because score diff
-  t.deepEqual(top4.map($.get('pos')), [1,1,3,3]); // which does not break between
+  (function () {
+    var tb = TieBreaker.from(gs, 4, { grouped: true });
+    t.equal(tb.matches.length, 3*1+1, "one 3 person groupstage and a 2player gs");
+    t.deepEqual(tb.matches, [
+        { id: { s: 1, r: 1, m: 1 }, p: [ 3, 8 ] },
+        { id: { s: 2, r: 1, m: 1 }, p: [ 5, 7 ] },
+        { id: { s: 2, r: 2, m: 1 }, p: [ 4, 7 ] },
+        { id: { s: 2, r: 3, m: 1 }, p: [ 4, 5 ] }
+      ], "grouped breakers"
+    );
+    tb.matches.forEach(function (m) {
+      tb.score(m.id, m.p[0] < m.p[1] ? [1,0] : [0,1]);
+    });
+    var top4 = tb.results().slice(0, 4);
+    t.deepEqual(top4.map($.get('seed')), [4,1,5,3]); // order because score diff
+    t.deepEqual(top4.map($.get('pos')), [1,1,3,3]); // which does not break between
+  }());
 
   t.done();
 };

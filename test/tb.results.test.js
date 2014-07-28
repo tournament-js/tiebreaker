@@ -1,13 +1,6 @@
 var $ = require('interlude')
   , GroupStage = require('groupstage')
-  , TieBreaker = require('../');
-
-// res filter
-var inGrp = function (g) {
-  return function (r) {
-    return r.grp === g;
-  };
-};
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 var makeStr = function (r) {
   var str = "P" + r.seed + " WDL=" + r.wins + ',' + r.draws + ',' + r.losses;

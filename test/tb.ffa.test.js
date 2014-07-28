@@ -1,6 +1,6 @@
 var $ = require('interlude')
   , FFA = require('ffa')
-  , TieBreaker = require('../');
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 var makeStr = function(r) {
   var str = r.pos + " P" + r.seed + " W=" + r.wins;

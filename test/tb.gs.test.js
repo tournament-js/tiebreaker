@@ -1,6 +1,6 @@
 var $ = require('interlude')
   , GroupStage = require('groupstage')
-  , TieBreaker = require('../');
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 exports.fullTiedNineThreePickWinner = function (t) {
   var gs = new GroupStage(9, { groupSize: 3 });

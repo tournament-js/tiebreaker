@@ -1,6 +1,5 @@
-var $ = require('interlude')
-  , FFA = require('ffa')
-  , TieBreaker = require('../');
+var FFA = require('ffa')
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 exports.unbalancedFfa = function (t) {
   var ffa = new FFA(16, { sizes: [4, 4], advancers: [2] });

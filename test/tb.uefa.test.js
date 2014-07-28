@@ -1,5 +1,5 @@
 var GroupStage = require('groupstage')
-  , TieBreaker = require('../');
+  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 exports.uefa = function (t) {
   // same as tb uefa test
@@ -31,7 +31,7 @@ exports.uefa = function (t) {
         t.ok(false, "should not be able to create " + n + "p TB from 2 groups");
       }
       catch (e) {
-        var r = "Cannot construct TieBreaker: "
+        var r = "Cannot construct TieBreaker: ";
         r += (n < 6) ?
           "number of sections must divide limit" :
           "limit must be an integer in {1, ..., previous.numPlayers}";
