@@ -21,15 +21,9 @@ exports.fullTiedNineThreePickWinner = function (t) {
 
   t.equal(tms.length, 3, "should only need within TBs");
 
-  var getPsInGroup = function (gNum) {
-    var grp = ms.filter(function (m) {
-      return m.id.s === gNum;
-    });
-    return $.nub($.flatten($.pluck('p', grp))).sort($.compare());
-  };
-  t.deepEqual(tms[0].p, getPsInGroup(1), "r1 tiebreaker contains group 1 players");
-  t.deepEqual(tms[1].p, getPsInGroup(2), "r1 tiebreaker contains group 2 players");
-  t.deepEqual(tms[2].p, getPsInGroup(3), "r1 tiebreaker contains group 3 players");
+  t.deepEqual(tms[0].p, gs.players({ s: 1 }), "r1 tiebreaker contains group 1 players");
+  t.deepEqual(tms[1].p, gs.players({ s: 2 }), "r1 tiebreaker contains group 2 players");
+  t.deepEqual(tms[2].p, gs.players({ s: 3 }), "r1 tiebreaker contains group 3 players");
 
   var isAllR1 = tms.map($.get('id', 'r')).every($.eq(1));
   t.ok(isAllR1, "should only have R1 tiebreakers (within groups)");
