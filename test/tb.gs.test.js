@@ -1,9 +1,8 @@
-var test = require('tap').test
-  , $ = require('interlude')
+var $ = require('interlude')
   , GroupStage = require('groupstage')
   , TieBreaker = require('../');
 
-test("gs 9 3 all equal scores - proceed 3", function (t) {
+exports.fullTiedNineThreePickWinner = function (t) {
   var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
@@ -16,7 +15,7 @@ test("gs 9 3 all equal scores - proceed 3", function (t) {
   var res = gs.results();
   t.deepEqual($.nub($.pluck('wins', res)), [1], "all players won 1 match");
 
-
+  // want to proceed the winner of each group
   var tb = TieBreaker.from(gs, 3, { strict: true });
   var tms = tb.matches;
 
@@ -45,10 +44,10 @@ test("gs 9 3 all equal scores - proceed 3", function (t) {
     t.ok(tb.score(m.id, [3,2,1]), "and it does");
   });
 
-  t.end();
-});
+  t.done();
+};
 
-test("gs 9 3 tied only between - proceed any", function (t) {
+exports.betweenTiedNineThreePickAny = function (t) {
   var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
@@ -70,10 +69,11 @@ test("gs 9 3 tied only between - proceed any", function (t) {
     });
     t.equal(tms.length, 0, "no TBs when picking equally from each group");
   });
-  t.end();
-});
+  t.done();
+};
 
-test("gs 6 3 unique groups !mapsBreak", function (t) {
+// TODO: this is a GroupStage test?... should not be in here..
+exports.mapsBreak = function (t) {
   [false, true].forEach(function (mapsBreak) {
     var gs = new GroupStage(6, { groupSize: 3, scoresBreak: mapsBreak});
     var ms = gs.matches;
@@ -135,5 +135,5 @@ test("gs 6 3 unique groups !mapsBreak", function (t) {
       }
     });
   });
-  t.end();
-});
+  t.done();
+};

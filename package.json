@@ -13,7 +13,7 @@
   ],
   "main": "tiebreaker.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "nodeunit --reporter=verbose test/*.js"
   },
   "dependencies": {
     "interlude": "~1.0.2",
@@ -21,8 +21,10 @@
     "groupstage": "~0.7.0"
   },
   "devDependencies": {
-    "tap": "~0.4.4",
-    "ffa": "~0.6.0"
+    "ffa": "~0.6.0",
+    "coveralls": "^2.11.1",
+    "nodeunit": "^0.9.0",
+    "jscoverage": "^0.5.5"
   },
   "bugs": {
     "url": "http://github.com/clux/tiebreaker/issues"

@@ -1,9 +1,7 @@
-var tap = require('tap')
-  , test = tap.test
-  , GroupStage = require('groupstage')
+var GroupStage = require('groupstage')
   , TieBreaker = require('../');
 
-test("tiebreaker 6 3 uefa unanimous scoring", function (t) {
+exports.uefa = function (t) {
   // same as tb uefa test
   var uefa = new GroupStage(6, {
     groupSize: 3,
@@ -41,5 +39,5 @@ test("tiebreaker 6 3 uefa unanimous scoring", function (t) {
       }
     }
   });
-  t.end();
-});
+  t.done();
+};

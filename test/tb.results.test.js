@@ -1,5 +1,4 @@
-var test = require('tap').test
-  , $ = require('interlude')
+var $ = require('interlude')
   , GroupStage = require('groupstage')
   , TieBreaker = require('../');
 
@@ -17,7 +16,7 @@ var makeStr = function (r) {
   return str;
 };
 
-test("8 4 with 2x three-way tie results", function (t) {
+exports.doubleThreewayTiesResults = function (t) {
   var gs = new GroupStage(8, { groupSize: 4 });
 
   gs.matches.forEach(function (m) {
@@ -102,11 +101,11 @@ test("8 4 with 2x three-way tie results", function (t) {
     'between results - pos ties resolved at limit point'
   );
 
-  t.end();
-});
+  t.done();
+};
 
 
-test("8 4 with 2x three-way tie results - different limits", function (t) {
+exports.doubleThreewayTiesLimits = function (t) {
   var gs = new GroupStage(8, { groupSize: 4 });
 
   // scored as above - dont modify!
@@ -226,6 +225,6 @@ test("8 4 with 2x three-way tie results - different limits", function (t) {
   };
   verifyWith6();
 
-  t.end();
-});
+  t.done();
+};
 

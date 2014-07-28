@@ -1,5 +1,4 @@
-var test = require('tap').test
-  , $ = require('interlude')
+var $ = require('interlude')
   , FFA = require('ffa')
   , TieBreaker = require('../');
 
@@ -13,7 +12,7 @@ var makeStr = function(r) {
 };
 
 
-test("ffa 8 [4] limit 4", function (t) {
+exports.eightFourLimited = function (t) {
   var ffa = new FFA(8, { sizes: [4] });
   var fm = ffa.matches;
   t.equal(fm.length, 2, "two matches in ffa");
@@ -61,10 +60,10 @@ test("ffa 8 [4] limit 4", function (t) {
     ], 'ffa posAry after tiebreaking'
   );
 
-  t.end();
-});
+  t.done();
+};
 
-test("ffa unbalanced continuation", function (t) {
+exports.unbalancedFifteen = function (t) {
   var ffa = new FFA(15, { sizes: [4, 4], advancers: [2] });
   var fm = ffa.matches;
   t.deepEqual(fm[0].p, [1, 5, 12], 'R1M1.p');
@@ -105,5 +104,5 @@ test("ffa unbalanced continuation", function (t) {
   var top4pos = $.pluck('pos', tbRes);
   t.deepEqual(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
 
-  t.end();
-});
+  t.done();
+};

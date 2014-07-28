@@ -1,9 +1,8 @@
-var test = require('tap').test
-  , $ = require('interlude')
+var $ = require('interlude')
   , FFA = require('ffa')
   , TieBreaker = require('../');
 
-test("ffa unbalanced continuation", function (t) {
+exports.unbalancedFfa = function (t) {
   var ffa = new FFA(16, { sizes: [4, 4], advancers: [2] });
   var fm = ffa.matches;
   // top seeds to final
@@ -83,5 +82,5 @@ test("ffa unbalanced continuation", function (t) {
     ], 'posAry after tb4 - fully broken cluster 1'
   );
 
-  t.end();
-});
+  t.done();
+};
