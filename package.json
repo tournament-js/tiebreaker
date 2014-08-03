@@ -2,7 +2,7 @@
   "name": "tiebreaker",
   "description": "A middle stage tournament that deals with unexpected ties",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "stability": "unstable",
   "repository": {
     "type": "git",
