@@ -21,7 +21,7 @@
   "dependencies": {
     "interlude": "~1.0.2",
     "tournament": "~0.21.0",
-    "groupstage": "~0.7.0"
+    "groupstage": "~0.7.1"
   },
   "devDependencies": {
     "ffa": "~0.6.0",

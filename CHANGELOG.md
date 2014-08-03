@@ -1,3 +1,7 @@
+0.4.1 / 2014-08-03
+==================
+  * Documentation and coverage
+
 0.4.0 / 2013-12-23
 ==================
   * Updated `tournament` to 0.21.0 so that `TieBreaker` is an `EventEmitter`
