@@ -50,7 +50,7 @@ exports.groupedTiebreaker = function (t) {
   tms.forEach(function (m) {
     // tie everything in group 1, highest seeds win in group 2
     var scrs = m.id.s === 1 ? [1, 1] : (m.p[0] < m.p[1] ? [1,0] : [0, 1]);
-    t.ok(tb.score(m.id, scrs), "can score " + tb.rep(m.id));
+    t.ok(tb.score(m.id, scrs), "can score " + m.id);
   });
 
   t.ok(tb.isDone(), 'tb done');
@@ -81,7 +81,7 @@ exports.groupedTiebreaker = function (t) {
     t.deepEqual(m.p, i === 0 ? [3,6] : i === 1 ? [1,6] : [1, 3], 's1 pls');
     // unbreak 3 and 6 only
     var scrs = (i === 2) ? [1,1] : (m.p[0] < m.p[1] ? [1,0] : [0,1]);
-    t.ok(tb2.score(m.id, scrs), "can score " + tb.rep(m.id));
+    t.ok(tb2.score(m.id, scrs), "can score " + m.id);
   });
 
   t.ok(tb2.isDone(), 'tb2 done');

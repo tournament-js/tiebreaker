@@ -1,3 +1,10 @@
+1.0.0 / 2014-09-03
+==================
+  * Remove `idString` but provide a `toString` function for match ids natively
+  * Remove hidden `::rep` from prototype
+  * toString now gives a simpler match id and excludes "R1 M1" in non-grouped
+  * Bump to tournament 1.0.0
+
 0.4.1 / 2014-08-03
 ==================
   * Documentation and coverage

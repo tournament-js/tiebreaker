@@ -19,12 +19,12 @@
     "coveralls": "npm run coverage | coveralls"
   },
   "dependencies": {
-    "interlude": "~1.0.2",
-    "tournament": "~0.21.0",
-    "groupstage": "~0.7.1"
+    "interlude": "^1.0.2",
+    "tournament": "^1.0.0",
+    "groupstage": "^1.0.0"
   },
   "devDependencies": {
-    "ffa": "~0.6.0",
+    "ffa": "^1.0.0",
     "coveralls": "^2.11.1",
     "nodeunit": "^0.9.0",
     "jscoverage": "^0.5.5"

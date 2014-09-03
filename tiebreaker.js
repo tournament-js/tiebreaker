@@ -2,6 +2,27 @@ var $ = require('interlude')
   , GroupStage = require('groupstage')
   , Base = require('tournament');
 
+// for grouped breakers
+function Id(s, r, m) {
+  this.s = s;
+  this.r = r;
+  this.m = m;
+}
+Id.prototype.toString = function () {
+  return "S" + this.s + " TB R" + this.r + " M" + this.m;
+};
+
+// for ffa breakers
+function SimpleId(s) {
+  this.s = s;
+  this.r = 1;
+  this.m = 1;
+}
+
+SimpleId.prototype.toString = function () {
+  return "S" + this.s + " TB";
+};
+
 //------------------------------------------------------------------
 // Init helpers
 //------------------------------------------------------------------
@@ -38,8 +59,9 @@ var createGroupStageBreaker = function (cluster, section, gsOpts) {
   });
   return gs;
 };
+
 var createFfaBreaker = function (cluster, section) {
-  return { id: { s: section, r: 1, m: 1}, p: cluster };
+  return { id: new SimpleId(section), p: cluster };
 };
 
 var createMatches = function (posAry, limit, opts) {
@@ -129,7 +151,7 @@ function TieBreaker(oldRes, posAry, limit, opts) {
         // NB: modifying the matches here so that outside world sees the section
         // corr. to the section they came from - whereas gs inst needs s === 1
         ms.push({
-          id: { s: xs[i].tbSection, r: m.id.r, m: m.id.m },
+          id: new Id(xs[i].tbSection, m.id.r, m.id.m),
           p: m.p.slice()
         });
       }
@@ -222,12 +244,6 @@ TieBreaker.defaults = function (opts) {
   return opts;
 };
 
-TieBreaker.idString = function (id) {
-  // TODO: perhaps minify id string to what is minimally required
-  // i.e. if only 1 match per section, then only say "S%d TB"
-  return "S" + id.s + " TB (R" + id.r + " M" + id.m + ")";
-};
-
 // custom from because TieBreaker has different constructor arguments
 TieBreaker.from = function (inst, numPlayers, opts) {
   var err = "Cannot forward from " + inst.name + ": ";
@@ -253,7 +269,7 @@ TieBreaker.isNecessary = function (inst, numPlayers, opts) {
   var hasNonEmptyCluster = function (cluster) {
     return cluster.length > 0;
   };
-  var clusters = createClusters(posAry, numPlayers, opts.breakForBetween)
+  var clusters = createClusters(posAry, numPlayers, opts.breakForBetween);
   return clusters.some(hasNonEmptyCluster);
 };
 
