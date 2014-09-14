@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "interlude": "^1.0.2",
-    "tournament": "^1.0.0",
-    "groupstage": "^1.0.0"
+    "tournament": "^2.0.0",
+    "groupstage": "^2.0.0"
   },
   "devDependencies": {
     "ffa": "^1.0.0",

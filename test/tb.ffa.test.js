@@ -89,9 +89,16 @@ exports.unbalancedFifteen = function (t) {
   var tbm = tb.matches;
   t.deepEqual(tbm[0].p, [1,2,6], 'r1 tiebreaker 1');
   t.deepEqual(tbm[1].p, [3,4,7], 'r1 tiebreaker 2');
+
+  // get some coverage of upcoming while we are at it
+  t.deepEqual(tb.upcoming(1), [tbm[0]], "upcoming for tbp1");
+  t.deepEqual(tb.upcoming(3), [tbm[1]], "upcoming for tbp3");
+  t.deepEqual(tb.upcoming(8), [], "p8 not part of tiebreaker");
+
   tb.score(tbm[0].id, [3,2,1]);
   tb.score(tbm[1].id, [3,2,1]);
   t.ok(tb.isDone(), 'tb done now');
+  t.equal(tb.upcoming(1).length, 0, "so no more upcoming for p1");
 
   var tbRes = tb.results();
   t.deepEqual(ffa.rawPositions(tbRes), [
