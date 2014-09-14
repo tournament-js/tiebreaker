@@ -235,13 +235,14 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 
 TieBreaker.defaults = function (opts) {
   opts = opts || {}; // bypass Base.defaults
-  opts.breakForBetween = Boolean(opts.breakForBetween);
-  opts.grouped = Boolean(opts.grouped);
-  opts.groupOpts = opts.grouped ? GroupStage.defaults(999, opts.groupOpts): {};
-  delete opts.groupOpts.groupSize; // all subgroups must be ONE group only
+  var o = {}; // dont modify input
+  o.breakForBetween = Boolean(opts.breakForBetween);
+  o.grouped = Boolean(opts.grouped);
+  o.groupOpts = o.grouped ? GroupStage.defaults(999, opts.groupOpts) : {};
+  delete o.groupOpts.groupSize; // all subgroups must be ONE group only
   // grouped tiebreakers cannot be strict
-  opts.strict = Boolean(opts.strict) && !opts.grouped;
-  return opts;
+  o.strict = Boolean(opts.strict) && !opts.grouped;
+  return o;
 };
 
 // custom from because TieBreaker has different constructor arguments
