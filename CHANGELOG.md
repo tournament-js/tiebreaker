@@ -2,6 +2,7 @@
 ==================
   * Bump tournament to 2.0.1
   * Bump interlude to 1.1.0
+  * Bump groupstage to 2.0.1
 
 2.0.0 / 2014-09-14
 ==================
