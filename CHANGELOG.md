@@ -1,3 +1,9 @@
+2.1.0 / 2014-10-03
+==================
+  * Implement `_safe` for better `unscorable` check for safe history rewrites
+  * Bump tournament to 2.2.0 for `_safe`
+  * Bump groupstage to 2.1.0 for `GroupStage::safe`
+
 2.0.1 / 2014-09-30
 ==================
   * Bump tournament to 2.0.1

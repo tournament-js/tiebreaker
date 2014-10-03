@@ -285,6 +285,9 @@ TieBreaker.prototype._verify =  function (match, score) {
   return null;
 };
 
+// can always rescore matches since we don't propagate to between group breakers
+TieBreaker.prototype._safe = $.constant(true);
+
 TieBreaker.prototype._progress = function (match) {
   if (this.grouped) {
     var gs = $.firstBy(function (gs) {

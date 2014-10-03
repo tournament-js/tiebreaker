@@ -81,5 +81,7 @@ exports.unbalancedFfa = function (t) {
     ], 'posAry after tb4 - fully broken cluster 1'
   );
 
+  // ensure we can still change our mind
+
   t.done();
 };

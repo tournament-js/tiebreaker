@@ -1,4 +1,6 @@
 var GroupStage = require('groupstage')
+  , FFA = require('ffa')
+  , $ = require('interlude')
   , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
 
 exports.uefa = function (t) {
@@ -39,5 +41,35 @@ exports.uefa = function (t) {
       }
     }
   });
+  t.done();
+};
+
+exports.rescoring = function (t) {
+  // make sure we can always recore a tiebreaker until we have committed the 'stage'
+  // which is tourney terminology
+  var ffa = new FFA(8, { sizes: [4] });
+  ffa.score(ffa.matches[0].id, [1,1,1,1]);
+  ffa.score(ffa.matches[1].id, [1,1,1,1]);
+  t.deepEqual(ffa.rawPositions(ffa.results()), [
+      [ [1,3,6,8],[],[],[] ],
+      [ [2,4,5,7],[],[],[] ]
+    ]
+    , "fully tied 4x2 ffa"
+  );
+  var tb = TieBreaker.from(ffa, 4);
+  t.equal(tb.matches.length, 2, "one tb for each 'group'");
+  tb.score(tb.matches[0].id, [4,3,2,1]);
+  tb.score(tb.matches[1].id, [4,3,2,1]);
+  t.ok(tb.isDone(), 'decided on winners of tb now');
+  t.deepEqual($.pluck('seed', tb.results().slice(0, 2)), [1,2], "winners top seeds");
+
+  t.equal(tb.unscorable(tb.matches[0].id, [1,2,3,4]), null, "can rescore G1 still");
+  t.equal(tb.unscorable(tb.matches[1].id, [1,2,3,4]), null, "can rescore G2 still");
+
+  tb.score(tb.matches[0].id, [1,2,3,4]);
+  tb.score(tb.matches[1].id, [1,2,3,4]);
+  t.ok(tb.isDone(), 'tb still done');
+  t.deepEqual($.pluck('seed', tb.results().slice(0, 2)), [7,8], "winners bottom seeds");
+
   t.done();
 };
