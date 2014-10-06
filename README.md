@@ -3,7 +3,7 @@
 [![build status](https://secure.travis-ci.org/clux/tiebreaker.svg)](http://travis-ci.org/clux/tiebreaker)
 [![dependency status](https://david-dm.org/clux/tiebreaker.svg)](https://david-dm.org/clux/tiebreaker)
 [![coverage status](http://img.shields.io/coveralls/clux/tiebreaker.svg)](https://coveralls.io/r/clux/tiebreaker)
-[![unstable](http://img.shields.io/badge/stability-unstable-E5AE13.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
+[![stable](http://img.shields.io/badge/stability-stable-74C614.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
 
 ## Overview
 TieBreaker deals within _groups_ ties in tournaments that has group-like equivalents. Such tournaments include:
