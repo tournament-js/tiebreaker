@@ -137,7 +137,7 @@ Results out from a `TieBreaker` instance are identical to the results received f
 - The `pos` attributes are at the end built up like `GroupStage`
 
 ## Limitations
-`TieBreaker` only allows a multiple of the number of groups/sections to be chosen, lest unfair inferences about positions between groups needs to be made. See [issue #3](clux/tiebreaker#3).
+`TieBreaker` only allows a multiple of the number of groups/sections to be chosen, lest unfair inferences about positions between groups needs to be made. See [issue #3](https://github.com/clux/tiebreaker/issues/3).
 
 ### Extras
 While TieBreaker implements `results` and `from` slightly differently than any other tournament, is still a perfectly valid [tournament](https://npmjs.org/package/tournament). All the methods available on the tournament base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/master/blob/doc/base.md)
