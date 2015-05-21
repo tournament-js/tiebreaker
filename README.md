@@ -110,7 +110,7 @@ If we wanted the top 4 to proceed to a different tournament we would end up pick
 
 While this seems terrible, `GroupStage` have nonetheless computed the results to the best of its knowledge.
 
-By specifying the number of players you want to extract, `TieBreaker` can create matches needed to forward the top `n` players ((some restrictions apply)[#limitations]) to another tournament _fairly_. See example below for a detailed explanation.
+By specifying the number of players you want to extract, `TieBreaker` can create matches needed to forward the top `n` players ([some restrictions apply](#limitations) to another tournament _fairly_. See example below for a detailed explanation.
 
 ## Example
 Using the ties outlined above, if we:
