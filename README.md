@@ -110,7 +110,7 @@ If we wanted the top 4 to proceed to a different tournament we would end up pick
 
 While this seems terrible, `GroupStage` have nonetheless computed the results to the best of its knowledge.
 
-By specifying the number of players you want to extract, `TieBreaker` can create matches needed to forward the top `n` players ([some restrictions apply](#limitations) to another tournament _fairly_. See example below for a detailed explanation.
+By specifying the number of players you want to extract, `TieBreaker` can create matches needed to forward the top `n` players ([some restrictions apply](#limitations) to another tournament _fairly_.
 
 ## Example
 Using the ties outlined above, if we:
@@ -137,7 +137,7 @@ Results out from a `TieBreaker` instance are identical to the results received f
 - The `pos` attributes are at the end built up like `GroupStage`
 
 ## Limitations
-`TieBreaker` only allows a multiple of the number of groups/sections to be chosen, lest unfair inferences about positions between groups is needed to be made. Some help with this is under development.
+`TieBreaker` only allows a multiple of the number of groups/sections to be chosen, lest unfair inferences about positions between groups needs to be made. See issue #3.
 
 ### Extras
 While TieBreaker implements `results` and `from` slightly differently than any other tournament, is still a perfectly valid [tournament](https://npmjs.org/package/tournament). All the methods available on the tournament base class exist on `TieBreaker`. Read the [tournament API](https://github.com/clux/tournament/master/blob/doc/base.md)
