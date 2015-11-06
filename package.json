@@ -3,7 +3,6 @@
   "description": "A middle stage tournament that deals with unexpected ties",
   "author": "Eirik Albrigtsen <analsandblaster@gmail.com>",
   "version": "3.0.0",
-  "stability": "stable",
   "repository": {
     "type": "git",
     "url": "clux/tiebreaker"
@@ -15,8 +14,7 @@
   "main": "tiebreaker.js",
   "scripts": {
     "test": "nodeunit --reporter=verbose test/*.js",
-    "coverage": "jscoverage tiebreaker.js && TIEBREAKER_COV=1 nodeunit --reporter=lcov test",
-    "coveralls": "npm run coverage | coveralls"
+    "coverage": "jscoverage tiebreaker.js && TIEBREAKER_COV=1 nodeunit --reporter=lcov test"
   },
   "dependencies": {
     "interlude": "^1.1.0",
@@ -25,7 +23,6 @@
   },
   "devDependencies": {
     "ffa": "^3.0.0",
-    "coveralls": "^2.11.1",
     "nodeunit": "^0.9.0",
     "jscoverage": "^0.5.5"
   },
