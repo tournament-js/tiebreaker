@@ -133,18 +133,18 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
     return new TieBreaker(oldRes, posAry, limit, opts);
   }
-  opts = TieBreaker.defaults(opts);
-  var invReason = TieBreaker.invalid(oldRes, posAry, opts, limit);
+  this._opts = TieBreaker.defaults(opts);
+  var invReason = TieBreaker.invalid(oldRes, posAry, this._opts, limit);
   if (invReason !== null) {
     console.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
-      limit, oldRes, opts
+      limit, oldRes, this._opts
     );
     throw new Error("Cannot construct TieBreaker: " + invReason);
   }
 
-  var xs = createMatches(posAry, limit, opts);
+  var xs = createMatches(posAry, limit, this._opts);
   var ms = [];
-  if (opts.grouped) {
+  if (this._opts.grouped) {
     for (var i = 0; i < xs.length; i += 1) {
       for (var j = 0; j < xs[i].matches.length; j += 1) {
         var m = xs[i].matches[j];
@@ -164,8 +164,8 @@ function TieBreaker(oldRes, posAry, limit, opts) {
 
   Base.call(this, oldRes.length, ms);
   this.name = 'TieBreaker';
-  this.grouped = opts.grouped;
-  this.strict = opts.strict;
+  this.grouped = this._opts.grouped;
+  this.strict = this._opts.strict;
   this.posAry = posAry;
   this.limit = limit;
   this.oldRes = oldRes;
@@ -235,11 +235,12 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
 
 TieBreaker.defaults = function (opts) {
   opts = opts || {}; // bypass Base.defaults
-  var o = {}; // dont modify input
+  var o = Base.defaults(999, opts); // dont modify input
   o.breakForBetween = Boolean(opts.breakForBetween);
   o.grouped = Boolean(opts.grouped);
   o.groupOpts = o.grouped ? GroupStage.defaults(999, opts.groupOpts) : {};
   delete o.groupOpts.groupSize; // all subgroups must be ONE group only
+  delete o.groupOpts.log;
   // grouped tiebreakers cannot be strict
   o.strict = Boolean(opts.strict) && !opts.grouped;
   return o;
