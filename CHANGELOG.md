@@ -1,3 +1,9 @@
+3.1.0 / 2015-12-XX
+==================
+  * Bump tournament to 3.1.1 for configurable logging
+  * Bump groupstage and ffa as well for same functionality there
+  * Expose `Id` class like the other tournaments
+
 3.0.0 / 2014-10-11
 ==================
   * Bump tournament to 3.0.0 for better serialization via `::state` and `.restore`

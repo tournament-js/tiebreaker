@@ -1,6 +1,7 @@
 var $ = require('interlude')
   , GroupStage = require('groupstage')
-  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
+  , TieBreaker = require('..')
+  , test = require('bandage');
 
 var makeStr = function (r) {
   var str = "P" + r.seed + " WDL=" + r.wins + ',' + r.draws + ',' + r.losses;
@@ -9,7 +10,7 @@ var makeStr = function (r) {
   return str;
 };
 
-exports.doubleThreewayTiesResults = function (t) {
+test('doubleThreewayTiesResults', function *(t) {
   var gs = new GroupStage(8, { groupSize: 4 });
 
   gs.matches.forEach(function (m) {
@@ -93,12 +94,10 @@ exports.doubleThreewayTiesResults = function (t) {
     ],
     'between results - pos ties resolved at limit point'
   );
-
-  t.done();
-};
+});
 
 
-exports.doubleThreewayTiesLimits = function (t) {
+test('doubleThreewayTiesLimits', function *(t) {
   var gs = new GroupStage(8, { groupSize: 4 });
 
   // scored as above - dont modify!
@@ -217,7 +216,5 @@ exports.doubleThreewayTiesLimits = function (t) {
     );
   };
   verifyWith6();
-
-  t.done();
-};
+});
 

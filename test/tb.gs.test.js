@@ -1,8 +1,9 @@
 var $ = require('interlude')
   , GroupStage = require('groupstage')
-  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
+  , TieBreaker = require('..')
+  , test = require('bandage');
 
-exports.fullTiedNineThreePickWinner = function (t) {
+test('fullTiedNineThreePickWinner', function *(t) {
   var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
@@ -13,17 +14,17 @@ exports.fullTiedNineThreePickWinner = function (t) {
   });
 
   var res = gs.results();
-  t.deepEqual($.nub($.pluck('wins', res)), [1], "all players won 1 match");
+  t.eq($.nub($.pluck('wins', res)), [1], "all players won 1 match");
 
   // want to proceed the winner of each group
   var tb = TieBreaker.from(gs, 3, { strict: true });
   var tms = tb.matches;
 
-  t.equal(tms.length, 3, "should only need within TBs");
+  t.eq(tms.length, 3, "should only need within TBs");
 
-  t.deepEqual(tms[0].p, gs.players({ s: 1 }), "r1 tiebreaker contains group 1 players");
-  t.deepEqual(tms[1].p, gs.players({ s: 2 }), "r1 tiebreaker contains group 2 players");
-  t.deepEqual(tms[2].p, gs.players({ s: 3 }), "r1 tiebreaker contains group 3 players");
+  t.eq(tms[0].p, gs.players({ s: 1 }), "r1 tiebreaker contains group 1 players");
+  t.eq(tms[1].p, gs.players({ s: 2 }), "r1 tiebreaker contains group 2 players");
+  t.eq(tms[2].p, gs.players({ s: 3 }), "r1 tiebreaker contains group 3 players");
 
   var isAllR1 = tms.map($.get('id', 'r')).every($.eq(1));
   t.ok(isAllR1, "should only have R1 tiebreakers (within groups)");
@@ -33,15 +34,13 @@ exports.fullTiedNineThreePickWinner = function (t) {
     t.ok(!tb.score(m.id, [1,2,2]), "cant tie-score tb " + i);
     t.ok(!tb.score(m.id, [1,2,1]), "cant tie-score tb " + i);
     t.ok(!tb.score(m.id, [2,1,2]), "cant tie-score tb " + i);
-    t.equal(m.p.length, 3, "3 players in tb " + i);
-    t.equal(tb.unscorable(m.id, [3,2,1]), null, "but this should work");
+    t.eq(m.p.length, 3, "3 players in tb " + i);
+    t.eq(tb.unscorable(m.id, [3,2,1]), null, "but this should work");
     t.ok(tb.score(m.id, [3,2,1]), "and it does");
   });
+});
 
-  t.done();
-};
-
-exports.betweenTiedNineThreePickAny = function (t) {
+test('betweenTiedNineThreePickAny', function *(t) {
   var gs = new GroupStage(9, { groupSize: 3 });
   var ms = gs.matches;
 
@@ -53,7 +52,7 @@ exports.betweenTiedNineThreePickAny = function (t) {
 
   var res = gs.results();
   var wins = $.nub($.pluck('wins', res)).sort($.compare(+1));
-  t.deepEqual(wins, [0, 1, 2], "full spectrum of wins");
+  t.eq(wins, [0, 1, 2], "full spectrum of wins");
 
   [3, 6].forEach(function (n) {
     var tb = TieBreaker.from(gs, n);
@@ -61,18 +60,17 @@ exports.betweenTiedNineThreePickAny = function (t) {
     tms.forEach(function (m) {
       t.ok(m.id.s <= 4, "all tb matches occur in s <= 4");
     });
-    t.equal(tms.length, 0, "no TBs when picking equally from each group");
+    t.eq(tms.length, 0, "no TBs when picking eqly from each group");
   });
-  t.done();
-};
+});
 
 // TODO: this is a GroupStage test?... should not be in here..
-exports.mapsBreak = function (t) {
+test('mapsBreak', function *(t) {
   [false, true].forEach(function (mapsBreak) {
     var gs = new GroupStage(6, { groupSize: 3, scoresBreak: mapsBreak});
     var ms = gs.matches;
 
-    t.equal(gs.scoresBreak, mapsBreak, 'set break correctly');
+    t.eq(gs.scoresBreak, mapsBreak, 'set break correctly');
     // want to score s.t. both groups have clear 1st, 2nd and 3rd (with mapsBreak)
     // but need breaking between
 
@@ -95,7 +93,7 @@ exports.mapsBreak = function (t) {
       return str;
     };
     if (!mapsBreak) {
-      t.deepEqual(gs.results().map(makeStr), [
+      t.eq(gs.results().map(makeStr), [
         '1 P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
         '1 P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2',
         '1 P5 WDL=1,0,1 F=4 A=3 => GPOS=1 in grp 2',
@@ -107,7 +105,7 @@ exports.mapsBreak = function (t) {
       );
     }
     else {
-      t.deepEqual(gs.results().map(makeStr), [
+      t.eq(gs.results().map(makeStr), [
         '1 P1 WDL=2,0,0 F=7 A=0 => GPOS=1 in grp 1',
         '1 P2 WDL=1,0,1 F=5 A=4 => GPOS=1 in grp 2', // P2 ties P5 because
         '1 P5 WDL=1,0,1 F=4 A=3 => GPOS=1 in grp 2', // same score diff
@@ -123,11 +121,10 @@ exports.mapsBreak = function (t) {
       if (!mapsBreak) {
         var tb = TieBreaker.from(gs, n);
         var tms = tb.matches;
-        t.equal(tms.length, 1, "should be one within tiebreaker for " + n);
+        t.eq(tms.length, 1, "should be one within tiebreaker for " + n);
         t.ok(tms[0].id.s <= 2, "it should be a within match then");
-        t.deepEqual(tms[0].p, [2, 4, 5], "entire group 2 must be broken");
+        t.eq(tms[0].p, [2, 4, 5], "entire group 2 must be broken");
       }
     });
   });
-  t.done();
-};
+});

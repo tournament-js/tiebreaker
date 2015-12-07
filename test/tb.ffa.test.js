@@ -1,6 +1,7 @@
 var $ = require('interlude')
   , FFA = require('ffa')
-  , TieBreaker = require(process.env.TIEBREAKER_COV ? '../tiebreaker-cov.js' : '../');
+  , TieBreaker = require('..')
+  , test = require('bandage');
 
 var makeStr = function(r) {
   var str = r.pos + " P" + r.seed + " W=" + r.wins;
@@ -12,17 +13,17 @@ var makeStr = function(r) {
 };
 
 
-exports.eightFourLimited = function (t) {
+test('eightFourLimited', function *(t) {
   var ffa = new FFA(8, { sizes: [4] });
   var fm = ffa.matches;
-  t.equal(fm.length, 2, "two matches in ffa");
-  t.deepEqual(fm[0].p, [1,3,6,8], 'players in match 1');
-  t.equal(ffa.score(fm[0].id, [4,4,2,1]), true, "score match 1");
-  t.deepEqual(fm[1].p, [2,4,5,7], 'players in match 2');
-  t.equal(ffa.score(fm[1].id, [3,2,2,1]), true, "score match 2");
+  t.eq(fm.length, 2, "two matches in ffa");
+  t.eq(fm[0].p, [1,3,6,8], 'players in match 1');
+  t.eq(ffa.score(fm[0].id, [4,4,2,1]), true, "score match 1");
+  t.eq(fm[1].p, [2,4,5,7], 'players in match 2');
+  t.eq(ffa.score(fm[1].id, [3,2,2,1]), true, "score match 2");
   t.ok(ffa.isDone(), 'ffa done now');
 
-  t.deepEqual(ffa.rawPositions(ffa.results()), [
+  t.eq(ffa.rawPositions(ffa.results()), [
       [[1,3],[],[6],[8]],
       [[2],[4,5],[],[7]]
     ], 'ffa posAry before tiebreaking'
@@ -30,15 +31,15 @@ exports.eightFourLimited = function (t) {
 
   var tb = TieBreaker.from(ffa, 2, { strict: true });
   var tbms = tb.matches;
-  t.equal(tbms.length, 1, "matches in tb");
-  t.equal(tbms[0].id.s, 1, "first is s1 ffa match");
-  t.deepEqual(tbms[0].p, [1, 3], "containing tied in match 1");
+  t.eq(tbms.length, 1, "matches in tb");
+  t.eq(tbms[0].id.s, 1, "first is s1 ffa match");
+  t.eq(tbms[0].p, [1, 3], "containing tied in match 1");
   tb.score(tbms[0].id, [2,1]);
   t.ok(tb.isDone(), 'tb done');
 
   var tbRes = tb.results();
 
-  t.deepEqual(tbRes.map(makeStr), [
+  t.eq(tbRes.map(makeStr), [
       // the between fighters
       "1 P1 W=1 F=4 A=0 GPOS=1",
       "1 P2 W=1 F=3 A=0 GPOS=1",
@@ -54,19 +55,17 @@ exports.eightFourLimited = function (t) {
     ], 'tb res'
   );
 
-  t.deepEqual(ffa.rawPositions(tbRes), [
+  t.eq(ffa.rawPositions(tbRes), [
       [[1],[3],[6],[8]],
       [[2],[4,5],[],[7]]
     ], 'ffa posAry after tiebreaking'
   );
+});
 
-  t.done();
-};
-
-exports.unbalancedFifteen = function (t) {
+test('unbalancedFifteen', function *(t) {
   var ffa = new FFA(15, { sizes: [4, 4], advancers: [2] });
   var fm = ffa.matches;
-  t.deepEqual(fm[0].p, [1, 5, 12], 'R1M1.p');
+  t.eq(fm[0].p, [1, 5, 12], 'R1M1.p');
   // can tie outside adv
   ffa.score(fm[0].id, [4,4,2]);
   ffa.score(fm[1].id, [3,3,2,2]);
@@ -75,7 +74,7 @@ exports.unbalancedFifteen = function (t) {
   ffa.score(fm[4].id, [4,4,4,1]); // final 1
   ffa.score(fm[5].id, [4,3,3,3]); // final 2
 
-  t.deepEqual(ffa.rawPositions(ffa.results()), [
+  t.eq(ffa.rawPositions(ffa.results()), [
       [ [1, 2, 6], [], [], [8] ],
       [ [5], [3, 4, 7], [], [] ]
     ], 'posAry for ffa - 2x three way tie in final'
@@ -87,21 +86,21 @@ exports.unbalancedFifteen = function (t) {
   // we would unfortunately just pick [1,5,2,6] (WHICH IS UNFAIR)
   var tb = TieBreaker.from(ffa, 4, { strict: true });
   var tbm = tb.matches;
-  t.deepEqual(tbm[0].p, [1,2,6], 'r1 tiebreaker 1');
-  t.deepEqual(tbm[1].p, [3,4,7], 'r1 tiebreaker 2');
+  t.eq(tbm[0].p, [1,2,6], 'r1 tiebreaker 1');
+  t.eq(tbm[1].p, [3,4,7], 'r1 tiebreaker 2');
 
   // get some coverage of upcoming while we are at it
-  t.deepEqual(tb.upcoming(1), [tbm[0]], "upcoming for tbp1");
-  t.deepEqual(tb.upcoming(3), [tbm[1]], "upcoming for tbp3");
-  t.deepEqual(tb.upcoming(8), [], "p8 not part of tiebreaker");
+  t.eq(tb.upcoming(1), [tbm[0]], "upcoming for tbp1");
+  t.eq(tb.upcoming(3), [tbm[1]], "upcoming for tbp3");
+  t.eq(tb.upcoming(8), [], "p8 not part of tiebreaker");
 
   tb.score(tbm[0].id, [3,2,1]);
   tb.score(tbm[1].id, [3,2,1]);
   t.ok(tb.isDone(), 'tb done now');
-  t.equal(tb.upcoming(1).length, 0, "so no more upcoming for p1");
+  t.eq(tb.upcoming(1).length, 0, "so no more upcoming for p1");
 
   var tbRes = tb.results();
-  t.deepEqual(ffa.rawPositions(tbRes), [
+  t.eq(ffa.rawPositions(tbRes), [
       [[1],[2],[6],[8]],
       [[5],[3],[4],[7]]
     ], 'posAry after tb - all broken'
@@ -109,7 +108,5 @@ exports.unbalancedFifteen = function (t) {
 
   var top4 = $.pluck('seed', tbRes.slice(0, 4));
   var top4pos = $.pluck('pos', tbRes);
-  t.deepEqual(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
-
-  t.done();
-};
+  t.eq(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
+});

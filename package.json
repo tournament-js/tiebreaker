@@ -13,8 +13,9 @@
   ],
   "main": "tiebreaker.js",
   "scripts": {
-    "test": "nodeunit --reporter=verbose test/*.js",
-    "coverage": "jscoverage tiebreaker.js && TIEBREAKER_COV=1 nodeunit --reporter=lcov test"
+    "test": "bndg test/*.js",
+    "precoverage": "istanbul cover bndg test/*.test.js",
+    "coverage": "cat coverage/lcov.info && rm -rf coverage"
   },
   "dependencies": {
     "interlude": "^1.1.0",
@@ -23,8 +24,8 @@
   },
   "devDependencies": {
     "ffa": "^3.1.0",
-    "nodeunit": "^0.9.0",
-    "jscoverage": "^0.5.5"
+    "bandage": "^0.4.0",
+    "istanbul": "^0.4.1"
   },
   "bugs": {
     "url": "http://github.com/clux/tiebreaker/issues"

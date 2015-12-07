@@ -3,24 +3,22 @@ var $ = require('interlude')
   , Base = require('tournament');
 
 // for grouped breakers
-function Id(s, r, m) {
+function Id(s, r, m, isSimple) {
   this.s = s;
   this.r = r;
   this.m = m;
+  Object.defineProperty(this, '_simple', {
+    value: isSimple
+  });
 }
 Id.prototype.toString = function () {
-  return "S" + this.s + " TB R" + this.r + " M" + this.m;
+  return this._simple ?
+    "S" + this.s + " TB" :
+    "S" + this.s + " TB R" + this.r + " M" + this.m;
 };
 
-// for ffa breakers
-function SimpleId(s) {
-  this.s = s;
-  this.r = 1;
-  this.m = 1;
-}
-
-SimpleId.prototype.toString = function () {
-  return "S" + this.s + " TB";
+var simpleId = function (s) {
+  return new Id(s, 1, 1, true);
 };
 
 //------------------------------------------------------------------
@@ -61,7 +59,7 @@ var createGroupStageBreaker = function (cluster, section, gsOpts) {
 };
 
 var createFfaBreaker = function (cluster, section) {
-  return { id: new SimpleId(section), p: cluster };
+  return { id: simpleId(section), p: cluster };
 };
 
 var createMatches = function (posAry, limit, opts) {
@@ -358,4 +356,5 @@ TieBreaker.prototype.rawPositions = function (/*res*/) {
   });
 };
 
+TieBreaker.Id = Id;
 module.exports = TieBreaker;
