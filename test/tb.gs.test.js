@@ -14,29 +14,29 @@ test('fullTiedNineThreePickWinner', function *(t) {
   });
 
   var res = gs.results();
-  t.eq($.nub($.pluck('wins', res)), [1], "all players won 1 match");
+  t.eq($.nub($.pluck('wins', res)), [1], 'all players won 1 match');
 
   // want to proceed the winner of each group
   var tb = TieBreaker.from(gs, 3, { strict: true });
   var tms = tb.matches;
 
-  t.eq(tms.length, 3, "should only need within TBs");
+  t.eq(tms.length, 3, 'should only need within TBs');
 
-  t.eq(tms[0].p, gs.players({ s: 1 }), "r1 tiebreaker contains group 1 players");
-  t.eq(tms[1].p, gs.players({ s: 2 }), "r1 tiebreaker contains group 2 players");
-  t.eq(tms[2].p, gs.players({ s: 3 }), "r1 tiebreaker contains group 3 players");
+  t.eq(tms[0].p, gs.players({ s: 1 }), 'r1 tiebreaker contains group 1 players');
+  t.eq(tms[1].p, gs.players({ s: 2 }), 'r1 tiebreaker contains group 2 players');
+  t.eq(tms[2].p, gs.players({ s: 3 }), 'r1 tiebreaker contains group 3 players');
 
   var isAllR1 = tms.map($.get('id', 'r')).every($.eq(1));
-  t.ok(isAllR1, "should only have R1 tiebreakers (within groups)");
+  t.ok(isAllR1, 'should only have R1 tiebreakers (within groups)');
 
   tms.forEach(function (m, i) {
-    t.ok(!tb.score(m.id, [2,2,2]), "cant tie-score tb " + i);
-    t.ok(!tb.score(m.id, [1,2,2]), "cant tie-score tb " + i);
-    t.ok(!tb.score(m.id, [1,2,1]), "cant tie-score tb " + i);
-    t.ok(!tb.score(m.id, [2,1,2]), "cant tie-score tb " + i);
-    t.eq(m.p.length, 3, "3 players in tb " + i);
-    t.eq(tb.unscorable(m.id, [3,2,1]), null, "but this should work");
-    t.ok(tb.score(m.id, [3,2,1]), "and it does");
+    t.ok(!tb.score(m.id, [2,2,2]), 'cant tie-score tb ' + i);
+    t.ok(!tb.score(m.id, [1,2,2]), 'cant tie-score tb ' + i);
+    t.ok(!tb.score(m.id, [1,2,1]), 'cant tie-score tb ' + i);
+    t.ok(!tb.score(m.id, [2,1,2]), 'cant tie-score tb ' + i);
+    t.eq(m.p.length, 3, '3 players in tb ' + i);
+    t.eq(tb.unscorable(m.id, [3,2,1]), null, 'but this should work');
+    t.ok(tb.score(m.id, [3,2,1]), 'and it does');
   });
 });
 
@@ -52,15 +52,15 @@ test('betweenTiedNineThreePickAny', function *(t) {
 
   var res = gs.results();
   var wins = $.nub($.pluck('wins', res)).sort($.compare(+1));
-  t.eq(wins, [0, 1, 2], "full spectrum of wins");
+  t.eq(wins, [0, 1, 2], 'full spectrum of wins');
 
   [3, 6].forEach(function (n) {
     var tb = TieBreaker.from(gs, n);
     var tms = tb.matches;
     tms.forEach(function (m) {
-      t.ok(m.id.s <= 4, "all tb matches occur in s <= 4");
+      t.ok(m.id.s <= 4, 'all tb matches occur in s <= 4');
     });
-    t.eq(tms.length, 0, "no TBs when picking eqly from each group");
+    t.eq(tms.length, 0, 'no TBs when picking eqly from each group');
   });
 });
 
@@ -87,9 +87,9 @@ test('mapsBreak', function *(t) {
     // grp1 should have pts 6 3 0 mapsFor 7 2 0 mapsAgainst 0 3 6
     // grp2 should have pts 3 3 3 mapsFor 5 4 3 mapsAgainst 4 5 3
     var makeStr = function(r) {
-      var str = r.pos + " P" + r.seed + " WDL=" + r.wins + ',' + r.draws + ',' + r.losses;
-      str += " F=" + r.for + " A=" + r.against;
-      str += " => GPOS=" + r.gpos + " in grp " + r.grp;
+      var str = r.pos + ' P' + r.seed + ' WDL=' + r.wins + ',' + r.draws + ',' + r.losses;
+      str += ' F=' + r.for + ' A=' + r.against;
+      str += ' => GPOS=' + r.gpos + ' in grp ' + r.grp;
       return str;
     };
     if (!mapsBreak) {
@@ -101,7 +101,7 @@ test('mapsBreak', function *(t) {
         '5 P6 WDL=1,0,1 F=2 A=3 => GPOS=2 in grp 1',
         '6 P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
       ],
-        "no break results"
+        'no break results'
       );
     }
     else {
@@ -113,7 +113,7 @@ test('mapsBreak', function *(t) {
         '5 P4 WDL=1,0,1 F=3 A=5 => GPOS=3 in grp 2',
         '5 P3 WDL=0,0,2 F=0 A=6 => GPOS=3 in grp 1'
       ],
-        "map break results"
+        'map break results'
       );
     }
 
@@ -121,9 +121,9 @@ test('mapsBreak', function *(t) {
       if (!mapsBreak) {
         var tb = TieBreaker.from(gs, n);
         var tms = tb.matches;
-        t.eq(tms.length, 1, "should be one within tiebreaker for " + n);
-        t.ok(tms[0].id.s <= 2, "it should be a within match then");
-        t.eq(tms[0].p, [2, 4, 5], "entire group 2 must be broken");
+        t.eq(tms.length, 1, 'should be one within tiebreaker for ' + n);
+        t.ok(tms[0].id.s <= 2, 'it should be a within match then');
+        t.eq(tms[0].p, [2, 4, 5], 'entire group 2 must be broken');
       }
     });
   });
