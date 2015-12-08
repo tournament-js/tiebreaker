@@ -23,9 +23,10 @@
     "groupstage": "^3.1.0"
   },
   "devDependencies": {
-    "ffa": "^3.1.0",
     "bandage": "^0.4.0",
-    "istanbul": "^0.4.1"
+    "ffa": "^3.1.0",
+    "istanbul": "^0.4.1",
+    "smell": "^2.0.6"
   },
   "bugs": {
     "url": "http://github.com/clux/tiebreaker/issues"

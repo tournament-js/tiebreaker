@@ -28,7 +28,6 @@ var simpleId = function (s) {
 var createClusters = function (posAry, limit, breakOneUp) {
   var numSections = posAry.length;
   var position = Math.ceil(limit / numSections);
-  //console.log('lim pos', position, posAry);
 
   return posAry.map(function (seedAry) {
     var unchosen = position;
@@ -134,7 +133,7 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   this._opts = TieBreaker.defaults(opts);
   var invReason = TieBreaker.invalid(oldRes, posAry, this._opts, limit);
   if (invReason !== null) {
-    console.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
+    this._opts.log.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
       limit, oldRes, this._opts
     );
     throw new Error("Cannot construct TieBreaker: " + invReason);

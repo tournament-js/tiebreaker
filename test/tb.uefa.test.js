@@ -2,6 +2,7 @@ var GroupStage = require('groupstage')
   , FFA = require('ffa')
   , $ = require('interlude')
   , TieBreaker = require('..')
+  , nullLog = require('smell')()
   , test = require('bandage');
 
 test('uefa', function *(t) {
@@ -21,7 +22,6 @@ test('uefa', function *(t) {
     [[2],[4],[5]],],
     'untied posAry'
   );
-
   [1,2,3,4,5,6].forEach(function (n) {
     if (n === 2 || n === 4) {
       // allowed but no ties
@@ -29,9 +29,8 @@ test('uefa', function *(t) {
       t.eq(tb.matches.length, 0, 'no matches required');
     }
     else {
-      // TODO: t.throws
       try {
-        TieBreaker.from(uefa, n);
+        TieBreaker.from(uefa, n, { log: nullLog });
         t.ok(false, 'should not be able to create ' + n + 'p TB from 2 groups');
       }
       catch (e) {

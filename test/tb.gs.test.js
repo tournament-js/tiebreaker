@@ -1,6 +1,7 @@
 var $ = require('interlude')
   , GroupStage = require('groupstage')
   , TieBreaker = require('..')
+  , nullLog = require('smell')()
   , test = require('bandage');
 
 test('fullTiedNineThreePickWinner', function *(t) {
@@ -17,7 +18,7 @@ test('fullTiedNineThreePickWinner', function *(t) {
   t.eq($.nub($.pluck('wins', res)), [1], 'all players won 1 match');
 
   // want to proceed the winner of each group
-  var tb = TieBreaker.from(gs, 3, { strict: true });
+  var tb = TieBreaker.from(gs, 3, { strict: true, log: nullLog });
   var tms = tb.matches;
 
   t.eq(tms.length, 3, 'should only need within TBs');
