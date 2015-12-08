@@ -3,7 +3,7 @@ var $ = require('interlude')
   , TieBreaker = require('..')
   , test = require('bandage');
 
-var makeStr = function(r) {
+var makeStr = function (r) {
   var str = r.pos + ' P' + r.seed + ' W=' + r.wins;
   str += ' F=' + r.for + ' A=' + r.against;
   if (r.gpos) {
@@ -24,9 +24,9 @@ test('eightFourLimited', function *(t) {
   t.ok(ffa.isDone(), 'ffa done now');
 
   t.eq(ffa.rawPositions(ffa.results()), [
-      [[1,3],[],[6],[8]],
-      [[2],[4,5],[],[7]]
-    ], 'ffa posAry before tiebreaking'
+    [[1,3],[],[6],[8]],
+    [[2],[4,5],[],[7]],],
+    'ffa posAry before tiebreaking'
   );
 
   var tb = TieBreaker.from(ffa, 2, { strict: true });
@@ -40,25 +40,25 @@ test('eightFourLimited', function *(t) {
   var tbRes = tb.results();
 
   t.eq(tbRes.map(makeStr), [
-      // the between fighters
-      '1 P1 W=1 F=4 A=0 GPOS=1',
-      '1 P2 W=1 F=3 A=0 GPOS=1',
-      // the new 2nd placers
-      '3 P3 W=1 F=4 A=0 GPOS=2',
-      '3 P4 W=0 F=2 A=1 GPOS=2',
-      '3 P5 W=0 F=2 A=1 GPOS=2',
-      // original 3rd placer
-      '6 P6 W=0 F=2 A=2 GPOS=3',
-      // original 4th placers
-      '7 P7 W=0 F=1 A=2 GPOS=4',
-      '7 P8 W=0 F=1 A=3 GPOS=4',
-    ], 'tb res'
+    // the between fighters
+    '1 P1 W=1 F=4 A=0 GPOS=1',
+    '1 P2 W=1 F=3 A=0 GPOS=1',
+    // the new 2nd placers
+    '3 P3 W=1 F=4 A=0 GPOS=2',
+    '3 P4 W=0 F=2 A=1 GPOS=2',
+    '3 P5 W=0 F=2 A=1 GPOS=2',
+    // original 3rd placer
+    '6 P6 W=0 F=2 A=2 GPOS=3',
+    // original 4th placers
+    '7 P7 W=0 F=1 A=2 GPOS=4',
+    '7 P8 W=0 F=1 A=3 GPOS=4',],
+    'tb res'
   );
 
   t.eq(ffa.rawPositions(tbRes), [
-      [[1],[3],[6],[8]],
-      [[2],[4,5],[],[7]]
-    ], 'ffa posAry after tiebreaking'
+    [[1],[3],[6],[8]],
+    [[2],[4,5],[],[7]],],
+    'ffa posAry after tiebreaking'
   );
 });
 
@@ -75,9 +75,9 @@ test('unbalancedFifteen', function *(t) {
   ffa.score(fm[5].id, [4,3,3,3]); // final 2
 
   t.eq(ffa.rawPositions(ffa.results()), [
-      [ [1, 2, 6], [], [], [8] ],
-      [ [5], [3, 4, 7], [], [] ]
-    ], 'posAry for ffa - 2x three way tie in final'
+    [ [1, 2, 6], [], [], [8] ],
+    [ [5], [3, 4, 7], [], [] ],],
+    'posAry for ffa - 2x three way tie in final'
   );
 
   // verify basic tiebreakability while we are at it
@@ -101,12 +101,13 @@ test('unbalancedFifteen', function *(t) {
 
   var tbRes = tb.results();
   t.eq(ffa.rawPositions(tbRes), [
-      [[1],[2],[6],[8]],
-      [[5],[3],[4],[7]]
-    ], 'posAry after tb - all broken'
+    [[1],[2],[6],[8]],
+    [[5],[3],[4],[7]],],
+    'posAry after tb - all broken'
   );
 
   var top4 = $.pluck('seed', tbRes.slice(0, 4));
-  var top4pos = $.pluck('pos', tbRes);
+  var top4pos = $.pluck('pos', tbRes.slice(0, 4));
+  t.eq(top4pos, [1, 1, 3, 3], 'top4 pos');
   t.eq(top4, [1, 5, 2, 3], 'broken top 4 picks 2 from each m');
 });

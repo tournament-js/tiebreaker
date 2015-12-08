@@ -17,9 +17,9 @@ test('uefa', function *(t) {
 
   var posAry = uefa.rawPositions(uefa.results());
   t.eq(posAry, [
-      [[1],[3],[6]],
-      [[2],[4],[5]]
-    ], 'untied posAry'
+    [[1],[3],[6]],
+    [[2],[4],[5]],],
+    'untied posAry'
   );
 
   [1,2,3,4,5,6].forEach(function (n) {
@@ -29,6 +29,7 @@ test('uefa', function *(t) {
       t.eq(tb.matches.length, 0, 'no matches required');
     }
     else {
+      // TODO: t.throws
       try {
         TieBreaker.from(uefa, n);
         t.ok(false, 'should not be able to create ' + n + 'p TB from 2 groups');
@@ -51,10 +52,9 @@ test('rescoring', function *(t) {
   ffa.score(ffa.matches[0].id, [1,1,1,1]);
   ffa.score(ffa.matches[1].id, [1,1,1,1]);
   t.eq(ffa.rawPositions(ffa.results()), [
-      [ [1,3,6,8],[],[],[] ],
-      [ [2,4,5,7],[],[],[] ]
-    ]
-    , 'fully tied 4x2 ffa'
+    [ [1,3,6,8],[],[],[] ],
+    [ [2,4,5,7],[],[],[] ],],
+    'fully tied 4x2 ffa'
   );
   var tb = TieBreaker.from(ffa, 4);
   t.eq(tb.matches.length, 2, 'one tb for each group');

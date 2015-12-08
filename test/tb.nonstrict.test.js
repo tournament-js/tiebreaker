@@ -15,9 +15,9 @@ test('unbalancedFfa', function *(t) {
   ffa.score(fm[5].id, [4,3,3,3]);
 
   t.eq(ffa.rawPositions(ffa.results()), [
-      [ [1, 3, 6], [], [], [8] ],
-      [ [2], [4, 5, 7], [], [] ]
-    ], 'posAry for ffa - 2x three way tie in final'
+    [ [1, 3, 6], [], [], [8] ],
+    [ [2], [4, 5, 7], [], [] ] ],
+    'posAry for ffa - 2x three way tie in final'
   );
 
   // want to gradually (over the course of several tiebreakers) break up posAry
@@ -32,9 +32,9 @@ test('unbalancedFfa', function *(t) {
   t.ok(tb.isDone(), 'tb done now');
 
   t.eq(tb.rawPositions(), [
-      [ [1, 3, 6], [], [], [8] ],
-      [ [2], [4, 5, 7], [], [] ]
-    ], 'posAry after tb1 - no changes'
+    [ [1, 3, 6], [], [], [8] ],
+    [ [2], [4, 5, 7], [], [] ] ],
+    'posAry after tb1 - no changes'
   );
 
   // then partialy break r1m2
@@ -48,9 +48,9 @@ test('unbalancedFfa', function *(t) {
   t.ok(tb2.isDone(), 'tb2 done now');
 
   t.eq(tb2.rawPositions(), [
-      [ [1, 3, 6], [], [], [8] ],
-      [ [2], [4, 5], [], [7] ]
-    ], 'posAry after tb2 - partially broken cluster 1'
+    [ [1, 3, 6], [], [], [8] ],
+    [ [2], [4, 5], [], [7] ] ],
+    'posAry after tb2 - partially broken cluster 1'
   );
 
   // then break remaining r1m2
@@ -64,9 +64,9 @@ test('unbalancedFfa', function *(t) {
   t.ok(tb3.isDone(), 'tb3 done now');
 
   t.eq(tb3.rawPositions(), [
-      [ [1, 3, 6], [], [], [8] ],
-      [ [2], [4], [5], [7] ]
-    ], 'posAry after tb3 - fully broken cluster 1'
+    [ [1, 3, 6], [], [], [8] ],
+    [ [2], [4], [5], [7] ] ],
+    'posAry after tb3 - fully broken cluster 1'
   );
 
   var tb4 = TieBreaker.from(tb3, 4);
@@ -77,9 +77,9 @@ test('unbalancedFfa', function *(t) {
   t.ok(tb4.isDone(), 'tb4 done now');
 
   t.eq(tb4.rawPositions(), [
-      [ [1, 3], [], [6], [8] ],
-      [ [2], [4], [5], [7] ]
-    ], 'posAry after tb4 - fully broken cluster 1'
+    [ [1, 3], [], [6], [8] ],
+    [ [2], [4], [5], [7] ] ],
+    'posAry after tb4 - fully broken cluster 1'
   );
 
   // ensure we can still change our mind

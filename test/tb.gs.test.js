@@ -9,7 +9,7 @@ test('fullTiedNineThreePickWinner', function *(t) {
 
   // score so that everyone got exactly one win
   // easy to do by symmetry in this case, reverse score middle match in group
-  ms.forEach(function (m){
+  ms.forEach(function (m) {
     gs.score(m.id, (m.id.r === 2) ? [0, 1] : [1, 0]);
   });
 
@@ -46,7 +46,7 @@ test('betweenTiedNineThreePickAny', function *(t) {
 
   // score so that everyone according to seed - ensures no ties within groups
   // but because all groups are identical, we cant pick from one group over another
-  ms.forEach(function (m){
+  ms.forEach(function (m) {
     gs.score(m.id, (m.p[0] < m.p[1]) ? [1, 0] : [0, 1]);
   });
 
@@ -78,7 +78,7 @@ test('mapsBreak', function *(t) {
     // this ensure no ties within the groups and no ties between groups
     // by reversing only one of the matches this is assured (and weighting by round)
     // weight map scores by groups as well
-    ms.forEach(function (m){
+    ms.forEach(function (m) {
       var a = m.id.r + m.id.s;
       gs.score(m.id, (m.id.r === m.id.s) ? [0, a] : [a, 0]);
     });
@@ -86,7 +86,7 @@ test('mapsBreak', function *(t) {
     // just to verify the grand scheme:
     // grp1 should have pts 6 3 0 mapsFor 7 2 0 mapsAgainst 0 3 6
     // grp2 should have pts 3 3 3 mapsFor 5 4 3 mapsAgainst 4 5 3
-    var makeStr = function(r) {
+    var makeStr = function (r) {
       var str = r.pos + ' P' + r.seed + ' WDL=' + r.wins + ',' + r.draws + ',' + r.losses;
       str += ' F=' + r.for + ' A=' + r.against;
       str += ' => GPOS=' + r.gpos + ' in grp ' + r.grp;

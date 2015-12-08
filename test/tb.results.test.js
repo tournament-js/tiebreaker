@@ -26,15 +26,14 @@ test('doubleThreewayTiesResults', function *(t) {
 
   var res = gs.results();
   t.deepEqual(res.map(makeStr), [
-      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8'
-    ],
+    'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+    'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8',],
     'gs results'
   );
 
@@ -47,15 +46,14 @@ test('doubleThreewayTiesResults', function *(t) {
   // pre start results
   var resInit = tb.results();
   t.deepEqual(resInit.map(makeStr), [
-      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
-      'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
-      'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
-      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8'
-    ],
+    'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+    'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
+    'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
+    'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
+    'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8',],
     'tb init results'
   );
   tb.score(tms[0].id, [3,2,1]);
@@ -63,15 +61,14 @@ test('doubleThreewayTiesResults', function *(t) {
 
   var resEarly = tb.results();
   t.deepEqual(resEarly.map(makeStr), [
-      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1', // orig winner
-      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
-      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
-      'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7',
-      'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
-      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8', // orig loser
-    ],
+    'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1', // orig winner
+    'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=7',
+    'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=7',
+    'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=7',
+    'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
+    'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8',], // orig loser
     'early results (after 1 match)'
   );
 
@@ -83,15 +80,14 @@ test('doubleThreewayTiesResults', function *(t) {
 
   var resBetween = tb.results();
   t.deepEqual(resBetween.map(makeStr), [
-      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
-      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
-      'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=5',
-      'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=5',
-      'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
-      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7'
-    ],
+    'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+    'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
+    'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
+    'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=5',
+    'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=5',
+    'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
+    'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7',],
     'between results - pos ties resolved at limit point'
   );
 });
@@ -112,20 +108,19 @@ test('doubleThreewayTiesLimits', function *(t) {
 
   var res = gs.results();
   t.deepEqual(gs.rawPositions(res), [
-      [[3],[1,6,8],[],[]],
-      [[4,5,7],[],[],[2]]
-    ], 'gs positions'
+    [[3],[1,6,8],[],[]],
+    [[4,5,7],[],[],[2]] ],
+    'gs positions'
   );
   t.deepEqual(res.map(makeStr), [
-      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8'
-    ],
+    'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+    'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+    'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+    'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8',],
     'gs results'
   );
 
@@ -142,15 +137,14 @@ test('doubleThreewayTiesLimits', function *(t) {
 
     var resR1 = tb.results();
     t.deepEqual(resR1.map(makeStr), [
-        'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-        'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-        'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
-        'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
-        'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
-        'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
-        'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=7',
-        'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8'
-      ],
+      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+      'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
+      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
+      'P6 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
+      'P8 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
+      'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=7',
+      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=8',],
       'resolved tb results'
     );
     // NB: this is a bit silly
@@ -178,15 +172,14 @@ test('doubleThreewayTiesLimits', function *(t) {
     t.ok(tb.isDone(), 'done');
     var resR1 = tb.results();
     t.deepEqual(resR1.map(makeStr), [
-        'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-        'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-        'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
-        'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
-        'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=5',
-        'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=5',
-        'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
-        'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7'
-      ],
+      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+      'P5 WDL=2,0,1 F=2 A=1 => GPOS=2 in grp 2 @pos=3',
+      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=3',
+      'P7 WDL=2,0,1 F=2 A=1 => GPOS=3 in grp 2 @pos=5',
+      'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=5',
+      'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
+      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7',],
       'resolved tb results'
     );
   };
@@ -203,15 +196,14 @@ test('doubleThreewayTiesLimits', function *(t) {
     t.ok(tb.isDone(), 'done');
     var resR1 = tb.results();
     t.deepEqual(resR1.map(makeStr), [
-        'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
-        'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-        'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-        'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
-        'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
-        'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=6',
-        'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
-        'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7'
-      ],
+      'P3 WDL=3,0,0 F=3 A=0 => GPOS=1 in grp 1 @pos=1',
+      'P4 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+      'P5 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+      'P7 WDL=2,0,1 F=2 A=1 => GPOS=1 in grp 2 @pos=1',
+      'P1 WDL=1,0,2 F=1 A=2 => GPOS=2 in grp 1 @pos=5',
+      'P6 WDL=1,0,2 F=1 A=2 => GPOS=3 in grp 1 @pos=6',
+      'P8 WDL=1,0,2 F=1 A=2 => GPOS=4 in grp 1 @pos=7',
+      'P2 WDL=0,0,3 F=0 A=3 => GPOS=4 in grp 2 @pos=7',],
       'resolved tb results'
     );
   };

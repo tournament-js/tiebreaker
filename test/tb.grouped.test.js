@@ -19,11 +19,12 @@ test('groupedTiebreaker', function *(t) {
   ffa.score(fm[1].id, [4,3,3,3]);
   t.ok(ffa.isDone());
   t.eq(ffa.rawPositions(ffa.results()), [
-      [[1,3,6],[],[],[8]],
-      [[2],[4,5,7],[],[]]
-    ], 'ffa raw positions'
+    [[1,3,6],[],[],[8]],
+    [[2],[4,5,7],[],[]],],
+    'ffa raw positions'
   );
-  t.eq(ffa.results().map(makeStr), [
+  t.eq(ffa.results().map(makeStr),
+    [
       'P1 gpos=1 pos=1',
       'P2 gpos=1 pos=1',
       'P3 gpos=1 pos=1',
@@ -31,7 +32,7 @@ test('groupedTiebreaker', function *(t) {
       'P4 gpos=2 pos=5',
       'P5 gpos=2 pos=5',
       'P7 gpos=2 pos=5',
-      'P8 gpos=4 pos=8'
+      'P8 gpos=4 pos=8',
     ],
     'tb results'
   );
@@ -59,19 +60,19 @@ test('groupedTiebreaker', function *(t) {
   t.ok(tb.isDone(), 'tb done');
   t.eq(tb.rawPositions(), [
       [[1,3,6],[],[],[8]],
-      [[2],[4],[5],[7]]
-    ], 'tb raw positions'
+      [[2],[4],[5],[7]],
+  ],
+    'tb raw positions'
   );
   t.eq(tb.results().map(makeStr), [
-      'P1 gpos=1 pos=1',
-      'P2 gpos=1 pos=1',
-      'P3 gpos=1 pos=1',
-      'P6 gpos=1 pos=1',
-      'P4 gpos=2 pos=5',
-      'P5 gpos=3 pos=6',
-      'P7 gpos=4 pos=7',
-      'P8 gpos=4 pos=7'
-    ],
+    'P1 gpos=1 pos=1',
+    'P2 gpos=1 pos=1',
+    'P3 gpos=1 pos=1',
+    'P6 gpos=1 pos=1',
+    'P4 gpos=2 pos=5',
+    'P5 gpos=3 pos=6',
+    'P7 gpos=4 pos=7',
+    'P8 gpos=4 pos=7',],
     'tb results'
   );
 
@@ -89,20 +90,19 @@ test('groupedTiebreaker', function *(t) {
 
   t.ok(tb2.isDone(), 'tb2 done');
   t.eq(tb2.rawPositions(), [
-      [[1,3],[],[6],[8]], // partially unbroken this group
-      [[2],[4],[5],[7]]
-    ], 'tb2 raw positions'
+    [[1,3],[],[6],[8]], // partially unbroken this group
+    [[2],[4],[5],[7]],],
+    'tb2 raw positions'
   );
   t.eq(tb2.results().map(makeStr), [
-      'P1 gpos=1 pos=1',
-      'P2 gpos=1 pos=1',
-      'P3 gpos=1 pos=1',
-      'P4 gpos=2 pos=4',
-      'P6 gpos=3 pos=5',
-      'P5 gpos=3 pos=5',
-      'P7 gpos=4 pos=7',
-      'P8 gpos=4 pos=7'
-    ],
+    'P1 gpos=1 pos=1',
+    'P2 gpos=1 pos=1',
+    'P3 gpos=1 pos=1',
+    'P4 gpos=2 pos=4',
+    'P6 gpos=3 pos=5',
+    'P5 gpos=3 pos=5',
+    'P7 gpos=4 pos=7',
+    'P8 gpos=4 pos=7',],
     'tb results'
   );
 
@@ -123,18 +123,18 @@ test('readme', function *(t) {
   });
 
   t.eq(gs.rawPositions(gs.results()), [
-      [[1],[3,8],[],[6]],
-      [[4,5,7],[],[],[2]]
-    ], 'gs positions'
+    [[1],[3,8],[],[6]],
+    [[4,5,7],[],[],[2]],],
+    'gs positions'
   );
   t.ok(TieBreaker.isNecessary(gs, 4), 'need to break this up');
 
   yield t.test('ffa breakers', function *(st) {
     var tb = TieBreaker.from(gs, 4); // want the top 4
     st.eq(tb.matches, [
-        { id: gid(1, 1, 1), p: [ 3, 8 ] },
-        { id: gid(2, 1, 1), p: [ 4, 5, 7 ] }
-      ], 'ffa breakers'
+      { id: gid(1, 1, 1), p: [ 3, 8 ] },
+      { id: gid(2, 1, 1), p: [ 4, 5, 7 ] },],
+      'ffa breakers'
     );
     tb.score(tb.matches[0].id, [2,1]);
     tb.score(tb.matches[1].id, [3,2,1]);
@@ -147,11 +147,11 @@ test('readme', function *(t) {
     var tb = TieBreaker.from(gs, 4, { grouped: true });
     st.eq(tb.matches.length, 3*1+1, 'one 3 person groupstage and a 2player gs');
     st.eq(tb.matches, [
-        { id: gid(1, 1, 1), p: [ 3, 8 ] },
-        { id: gid(2, 1, 1), p: [ 5, 7 ] },
-        { id: gid(2, 2, 1), p: [ 4, 7 ] },
-        { id: gid(2, 3, 1), p: [ 4, 5 ] }
-      ], 'grouped breakers'
+      { id: gid(1, 1, 1), p: [ 3, 8 ] },
+      { id: gid(2, 1, 1), p: [ 5, 7 ] },
+      { id: gid(2, 2, 1), p: [ 4, 7 ] },
+      { id: gid(2, 3, 1), p: [ 4, 5 ] },],
+      'grouped breakers'
     );
     tb.matches.forEach(function (m) {
       tb.score(m.id, m.p[0] < m.p[1] ? [1,0] : [0,1]);
