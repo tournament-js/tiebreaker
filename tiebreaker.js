@@ -230,16 +230,16 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
   return null;
 };
 
-TieBreaker.defaults = function (opts_) {
-  var opts = opts_ || {}; // bypass Base.defaults
-  var o = Base.defaults(999, opts || {}); // dont modify input
-  o.breakForBetween = Boolean(opts.breakForBetween);
-  o.grouped = Boolean(opts.grouped);
-  o.groupOpts = o.grouped ? GroupStage.defaults(999, opts.groupOpts) : {};
+TieBreaker.defaults = function (opts) {
+   // Call defaults from other classes manually + dont modify input
+  var o = Base.defaults(Math.Infinity, opts || {});
+  o.breakForBetween = Boolean(o.breakForBetween);
+  o.grouped = Boolean(o.grouped);
+  o.groupOpts = o.grouped ? GroupStage.defaults(Math.Infinity, o.groupOpts) : {};
   delete o.groupOpts.groupSize; // all subgroups must be ONE group only
   delete o.groupOpts.log;
   // grouped tiebreakers cannot be strict
-  o.strict = Boolean(opts.strict) && !opts.grouped;
+  o.strict = Boolean(o.strict) && !o.grouped;
   return o;
 };
 
