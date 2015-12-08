@@ -13,17 +13,17 @@ function Id(s, r, m, isSimple) {
 }
 Id.prototype.toString = function () {
   return this._simple ?
-    "S" + this.s + " TB" :
-    "S" + this.s + " TB R" + this.r + " M" + this.m;
+    'S' + this.s + ' TB' :
+    'S' + this.s + ' TB R' + this.r + ' M' + this.m;
 };
 
 var simpleId = function (s) {
   return new Id(s, 1, 1, true);
 };
 
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Init helpers
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 var createClusters = function (posAry, limit, breakOneUp) {
   var numSections = posAry.length;
@@ -72,9 +72,9 @@ var createMatches = function (posAry, limit, opts) {
   return xs;
 };
 
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 // results / rawPositions helpers
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 // NB: expects instance context
 var getWithinBreakerScore = function (section) {
@@ -83,8 +83,8 @@ var getWithinBreakerScore = function (section) {
     return (ffaM && ffaM.m) ? ffaM : null;
   }
 
-  var gs = $.firstBy(function (gs) {
-    return gs.tbSection === section;
+  var gs = $.firstBy(function (stage) {
+    return stage.tbSection === section;
   }, this.groupStages);
 
   if (gs == null || !gs.isDone()) {
@@ -122,9 +122,9 @@ var updateSeedAry = function (seedAry, match) {
   return res;
 };
 
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Interface
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 function TieBreaker(oldRes, posAry, limit, opts) {
   if (!(this instanceof TieBreaker)) {
@@ -133,10 +133,10 @@ function TieBreaker(oldRes, posAry, limit, opts) {
   this._opts = TieBreaker.defaults(opts);
   var invReason = TieBreaker.invalid(oldRes, posAry, this._opts, limit);
   if (invReason !== null) {
-    this._opts.log.error("Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j",
+    this._opts.log.error('Invalid %d player TieBreaker with oldRes=%j rejected, opts=%j',
       limit, oldRes, this._opts
     );
-    throw new Error("Cannot construct TieBreaker: " + invReason);
+    throw new Error('Cannot construct TieBreaker: ' + invReason);
   }
 
   var xs = createMatches(posAry, limit, this._opts);
@@ -189,27 +189,27 @@ function TieBreaker(oldRes, posAry, limit, opts) {
 }
 Base.inherit(TieBreaker);
 
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Static helpers
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 // custom invalid that doesn't call inherited versions (because different ctor args)
 TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
   if (!Array.isArray(oldRes)) {
-    return "results must be implemented";
+    return 'results must be implemented';
   }
   if (!Array.isArray(posAry) || !posAry.length) {
-    return "rawPositions must be implemented properly";
+    return 'rawPositions must be implemented properly';
   }
   if (!Base.isInteger(limit) || limit < 1 || limit >= oldRes.length) {
-    return "limit must be an integer in {1, ..., previous.numPlayers}";
+    return 'limit must be an integer in {1, ..., previous.numPlayers}';
   }
   if (limit % posAry.length !== 0) {
-    return "number of sections must divide limit";
+    return 'number of sections must divide limit';
   }
   oldRes.forEach(function (r) {
-    if (![r.seed, r['for'], r.pos].every(Base.isInteger)) {
-      return "invalid results format - common properties missing";
+    if (![r.seed, r.for, r.pos].every(Base.isInteger)) {
+      return 'invalid results format - common properties missing';
     }
   });
   var len = posAry[0].length;
@@ -217,22 +217,22 @@ TieBreaker.invalid = function (oldRes, posAry, opts, limit) {
   posAry.forEach(function (seedAry) {
     seedAry.forEach(function (p) {
       if (!Base.isInteger(p) || p <= Base.NONE) {
-        return "invalid rawPositions - all entries must be arrays of integers";
+        return 'invalid rawPositions - all entries must be arrays of integers';
       }
     });
     if (Math.abs(seedAry.length - len) > 1) { // allow diff of 1
-      return "rawPositions must be ~equally long for every section";
+      return 'rawPositions must be ~equally long for every section';
     }
     if (Math.abs($.flatten(seedAry).length - s0Len) > 1) { // ditto
-      return "rawPositions must contain ~equally many players per section";
+      return 'rawPositions must contain ~equally many players per section';
     }
   });
   return null;
 };
 
-TieBreaker.defaults = function (opts) {
-  opts = opts || {}; // bypass Base.defaults
-  var o = Base.defaults(999, opts); // dont modify input
+TieBreaker.defaults = function (opts_) {
+  var opts = opts_ || {}; // bypass Base.defaults
+  var o = Base.defaults(999, opts || {}); // dont modify input
   o.breakForBetween = Boolean(opts.breakForBetween);
   o.grouped = Boolean(opts.grouped);
   o.groupOpts = o.grouped ? GroupStage.defaults(999, opts.groupOpts) : {};
@@ -245,16 +245,16 @@ TieBreaker.defaults = function (opts) {
 
 // custom from because TieBreaker has different constructor arguments
 TieBreaker.from = function (inst, numPlayers, opts) {
-  var err = "Cannot forward from " + inst.name + ": ";
+  var err = 'Cannot forward from ' + inst.name + ': ';
   if (!inst.isDone()) {
-    throw new Error(err + "tournament not done");
+    throw new Error(err + 'tournament not done');
   }
   var res = inst.results();
   if (res.length < numPlayers) {
-    throw new Error(err + "not enough players");
+    throw new Error(err + 'not enough players');
   }
   if (!inst.rawPositions) {
-    throw new Error(inst.name + " does not implement rawPositions");
+    throw new Error(inst.name + ' does not implement rawPositions');
   }
   var posAry = inst.rawPositions(res);
 
@@ -263,22 +263,22 @@ TieBreaker.from = function (inst, numPlayers, opts) {
 };
 
 TieBreaker.isNecessary = function (inst, numPlayers, opts) {
-  opts = TieBreaker.defaults(opts);
+  var o = TieBreaker.defaults(opts);
   var posAry = inst.rawPositions(inst.results());
   var hasNonEmptyCluster = function (cluster) {
     return cluster.length > 0;
   };
-  var clusters = createClusters(posAry, numPlayers, opts.breakForBetween);
+  var clusters = createClusters(posAry, numPlayers, o.breakForBetween);
   return clusters.some(hasNonEmptyCluster);
 };
 
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Expected methods
-//------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 TieBreaker.prototype._verify =  function (match, score) {
   if (this.strict && $.nub(score).length !== score.length) {
-    return "scores must unambiguously decide every position in strict mode";
+    return 'scores must unambiguously decide every position in strict mode';
   }
   return null;
 };
@@ -288,8 +288,8 @@ TieBreaker.prototype._safe = $.constant(true);
 
 TieBreaker.prototype._progress = function (match) {
   if (this.grouped) {
-    var gs = $.firstBy(function (gs) {
-      return gs.tbSection === match.id.s;
+    var gs = $.firstBy(function (stage) {
+      return stage.tbSection === match.id.s;
     }, this.groupStages);
     var oldId = { s: 1, r: match.id.r, m: match.id.m };
     gs.score(oldId, match.m);
@@ -347,7 +347,7 @@ TieBreaker.prototype.results = function () {
   return res.sort(finalCompare);
 };
 
-TieBreaker.prototype.rawPositions = function (/*res*/) {
+TieBreaker.prototype.rawPositions = function () {
   var findScores = getWithinBreakerScore.bind(this);
   return this.posAry.map(function (seedAry, i) {
     var match = findScores(i+1);
