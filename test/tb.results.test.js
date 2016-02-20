@@ -1,7 +1,6 @@
-var $ = require('interlude')
-  , GroupStage = require('groupstage')
-  , TieBreaker = require('..')
-  , test = require('bandage');
+var GroupStage = require('groupstage');
+var TieBreaker = require('..');
+var test = require('bandage');
 
 var makeStr = function (r) {
   var str = 'P' + r.seed + ' WDL=' + r.wins + ',' + r.draws + ',' + r.losses;
